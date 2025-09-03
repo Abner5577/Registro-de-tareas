@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas</title>
+    <!--Fuentes agregadas en sitio-->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!--Conexión con el estilo-->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <h1>Gestor de Tareas  Diarias</h1>
+            <p>Optimice su productividad y seguimiento de actividades.</p>
+        </div>
+    </header>
+    
+    <nav class="main-nav-section">
+        <ul>
+            <li>
+                <a href="#" id="menu-ingresar-tarea" class="active">
+                    <i class="fas fa-plus-circle"></i> <span>Registrar Tarea</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" id="menu-ver-tareas">
+                    <i class="fas fa-list-alt"></i> <span>Ver Tareas</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-container">
+        <main class="content-area">
+            <section id="form-tareas" class="page-section active">
+                <h2>Registrar Nueva Tarea</h2>
+                <form id="tareaForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fechaAsignacion">Fecha de Asignación:</label>
+                            <input type="date" id="fechaAsignacion" required>
+                            <span class="error-message" id="errorFechaAsignacion"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="tituloActividad">Título de la Actividad:</label>
+                            <input type="text" id="tituloActividad" placeholder="Ej: Preparar informe mensual" required>
+                            <span class="error-message" id="errorTituloActividad"></span>
+                        </div>
+                    </div>
+                    
+                    <label for="descripcion">Descripción de la Tarea:</label>
+                    <textarea id="descripcion" rows="3" placeholder="Detalles específicos de la tarea..."></textarea>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="departamento">Departamento:</label>
+                            <select id="departamento" required>
+                                <option value="">Seleccione un departamento</option>
+                                <option value="Financiero">Financiero</option>
+                                <option value="Informatica">Informática</option>
+                                <option value="Tecnico">Técnico</option>
+                                <option value="Infraestructura">Infraestructura y Tec.</option>
+                                <option value="Inventarios">Inventarios</option>
+                                <option value="VISA">VISA</option>
+                                <option value="Recepcion">Recepción</option>
+                                <option value="Transportes">Transportes</option>
+                                <option value="Direccion">Dirección</option>
+                                <option value="Juridico">Jurídico</option>
+                                <option value="Archivo">Archivo</option>
+                                <option value="RRHH">RRHH</option>
+                            </select>
+                            <span class="error-message" id="errorDepartamento"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="usuarioSoporte">Usuario de Soporte:</label>
+                            <input type="text" id="usuarioSoporte" placeholder="Ej: Juan Pérez" required>
+                            <span class="error-message" id="errorUsuarioSoporte"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit">Guardar Tarea</button>
+                </form>
+            </section>
+
+            <section id="lista-tareas" class="page-section">
+    <h2>Listado y Gestión de Tareas</h2>
+    <div class="filtros">
+        <label for="filtroEstado">Estado:</label>
+        <select id="filtroEstado">
+            <option value="Todas">Todas</option>
+            <option value="Pendiente">Pendientes</option>
+            <option value="Realizada">Realizadas</option>
+        </select>
+        <label for="filtroDepartamento">Departamento:</label>
+        <select id="filtroDepartamento">
+            <option value="Todos">Todos</option>
+            <option value="Financiero">Financiero</option>
+            <option value="Informatica">Informática</option>
+            <option value="Tecnico">Técnico</option>
+            <option value="Infraestructura">Infraestructura y Tec.</option>
+            <option value="Inventarios">Inventarios</option>
+            <option value="VISA">VISA</option>
+            <option value="Recepcion">Recepción</option>
+            <option value="Transportes">Transportes</option>
+            <option value="Direccion">Dirección</option>
+            <option value="Juridico">Jurídico</option>
+            <option value="Archivo">Archivo</option>
+            <option value="RRHH">RRHH</option>
+        </select>
+        <label for="filtroFecha">Fecha:</label>
+        <input type="date" id="filtroFecha">
+        <button id="limpiarFiltros">Restablecer Filtros</button>
+    </div>
+    
+    <div class="tabla-contenedor">
+        <table id="tablaTareas">
+            <thead>
+                <tr>
+                    <th class="titulotabla">Título</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Depart.</th>
+                    <th>Usuario</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+        <p id="mensaje-carga">Cargando tareas...</p>
+    </div>
+</section>
+
+
+
+        </main>
+    </div> 
+    <footer>
+        <p>&copy; 2025 Gestor de Tareas. Desarrollado con IA y Abner Sagastumee</p>
+    </footer>
+
+    <script src="script.js" defer></script> 
+</body>
+</html>

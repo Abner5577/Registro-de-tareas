@@ -1,0 +1,765 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Variables para los colores y fuentes actuales */
+:root {
+    --color-fondo-principal: #fcfcfc; /* Fondo general, ahora blanco */
+    --color-fondo-secundario: #0B2A4A; /* Fondo de secciones y header, azul oscuro */
+    --color-texto-claro: #ecf0f1; /* Texto para fondo oscuro */
+    --color-primario-accion: #fff531f9; /* Amarillo brillante para acciones/resaltar */
+    --color-secundario-accion: #e74c3c; /* Rojo para errores/peligro */
+    --color-borde: #7f8c8d; /* Gris para bordes */
+    --color-sombra: rgba(0, 0, 0, 0.4);
+
+    /* Variables para la nueva sección de navegación */
+    --color-nav-section-fondo: #0A243F; /* Fondo de la sección de navegación */
+    --color-nav-button-fondo: #0B2A4A; /* Fondo de los botones de navegación */
+    --color-nav-button-hover: #fff531f9; /* Un azul más claro para el hover */
+    --color-nav-button-active: var(--color-primario-accion); /* Activo del botón de navegación */
+
+    --font-pixel: 'Press Start 2P', cursive;
+    --font-general: 'Poppins', sans-serif;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Reseteo básico y fuentes */
+body {
+    width: 100%;
+    font-family: var(--font-general);
+    background-color: var(--color-fondo-principal);
+    color: #333;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Encabezado Principal */
+.main-header {
+    background-color: var(--color-fondo-secundario);
+    color: var(--color-texto-claro);
+    padding: 15px 20px;
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 4px 8px var(--color-sombra);
+    border-bottom: 3px solid var(--color-primario-accion);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-header .header-content {
+    margin-bottom: 0;
+}
+
+.main-header h1 {
+    font-family: var(--font-pixel);
+    color: var(--color-primario-accion);
+    text-shadow: 2px 2px 0px var(--color-sombra);
+    margin: 0;
+    font-size: 2em;
+}
+
+.main-header p {
+    font-family: var(--font-general);
+    color: var(--color-texto-claro);
+    margin: 5px 0 0 0;
+    font-size: 0.9em;
+}
+
+/* Nueva Sección de Navegación (antes .main-nav) */
+.main-nav-section {
+width: 100%;
+background-color: var(--color-nav-section-fondo);
+padding: 15px 0;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+border-bottom: 2px solid var(--color-primario-accion);
+box-sizing: border-box;
+}
+.main-nav-section ul {
+list-style: none;
+padding: 0;
+margin: 0 auto;
+display: flex;
+justify-content: center;
+gap: 20px;
+flex-wrap: wrap;
+max-width: 800px;
+}
+
+.main-nav-section ul li a {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 10px 20px;
+background-color: #000;
+color: var(--color-texto-claro);
+text-decoration: none;
+border-radius: 5px;
+font-family: var(--font-general);
+font-weight: bold;
+transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Transiciones más limpias */
+border: 1px solid var(--color-borde);
+white-space: nowrap;
+transform: translateY(0); /* Resetear cualquier transformación por defecto */
+box-shadow: none; /* Resetear cualquier sombra por defecto */
+}
+
+.main-nav-section ul li a:hover{
+background-color: var(--color-nav-button-hover);
+color: #000; 
+border: 1px solid #0A243F; /*
+border-color: var(--color-primario-accion); / Resaltar el borde al pasar el ratón /
+color: var(--color-texto-claro); / Mantener el color del texto claro /
+transform: translateY(-2px); / Ligeramente elevar el botón al pasar el ratón /
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); / Añadir una sombra sutil al hacer hover */
+}
+
+/* Estilos de los iconos en el menú */
+.main-nav-section ul li a i {
+font-size: 1.2em;
+color: var(--color-texto-claro);
+transition: color 0.3s ease;
+}
+
+
+/* Contenedor principal (contenido debajo del header y nav) */
+.main-container {
+    flex: 1;
+    width: 100%;
+    max-width: 2000px;
+    margin: 20px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* Área de Contenido Principal */
+.content-area {
+    flex-grow: 1;
+    background-color: var(--color-fondo-principal);
+    color: #333;
+    overflow-y: auto;
+}
+
+/* Las secciones de página */
+.page-section {
+    background-color: var(--color-fondo-secundario);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px var(--color-sombra);
+    border: 2px solid var(--color-borde);
+    display: none;
+    margin-bottom: 30px;
+    color: var(--color-texto-claro);
+    box-sizing: border-box;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.page-section.active {
+    display: block;
+}
+
+/* Formulario */
+
+/* --- Nuevos estilos para organizar campos en filas --- */
+.form-row {
+    display: flex;
+    gap: 20px; /* Espacio entre los campos de la fila */
+    align-items: flex-start; /* Alinea los ítems al inicio (parte superior) */
+    margin-bottom: 15px; /* Espacio debajo de la fila */
+    flex-wrap: wrap; /* Permite que los campos se envuelvan en pantallas pequeñas */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Espacio entre label, input y error dentro del grupo */
+    flex: 1; /* Esto hará que todos los form-group dentro de un form-row compartan el espacio por igual */
+    min-width: 200px; /* Ancho mínimo para cada campo en la fila */
+}
+
+/* Reglas específicas para la primera fila (Fecha y Título) */
+.form-row:first-of-type .form-group:first-child { /* Fecha de Asignación */
+    flex: 1; /* Ocupa 1 parte del espacio disponible */
+    max-width: 200px; /* Ancho máximo para la fecha en pantallas grandes */
+}
+
+.form-row:first-of-type .form-group:last-child { /* Título de la Actividad */
+    flex: 3; /* Ocupa 3 partes del espacio disponible (será más grande) */
+}
+
+/* Ajuste para input y textarea dentro de form-group */
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group textarea,
+.form-group select {
+    width: 100%; /* Asegura que tomen el 100% de su form-group */
+}
+
+
+
+
+/* Media Query para pantallas pequeñas: volver a apilar los campos */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column; /* Apila los campos en columna en pantallas pequeñas */
+        gap: 15px; /* Espacio entre los campos apilados */
+    }
+
+    .form-row .form-group {
+        width: 100%; /* Ocupa todo el ancho disponible */
+        max-width: none; /* Eliminar restricciones de ancho máximo */
+    }
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-family: var(--font-general);
+    font-weight: bold;
+    color: var(--color-texto-claro);
+}
+
+input[type="text"],
+textarea,
+select,
+input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #4a4949;
+    font-family: var(--font-general);
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-primario-accion);
+    box-shadow: 0 0 5px var(--color-primario-accion);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+button[type="submit"] {
+    background-color: var(--color-primario-accion);
+    color: #000;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-family: var(--font-pixel);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-shadow: 1px 1px 0px var(--color-sombra);
+    border: 2px solid #DDB800;
+    align-self: center;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+button[type="submit"]:hover {
+    background-color: #ffde00;
+    transform: translateY(-2px);
+    color: #000;
+}
+
+/* Estilos para los mensajes de error */
+.error-message {
+    color: var(--color-secundario-accion);
+    font-size: 0.85em;
+    margin-top: -10px;
+    margin-bottom: 5px;
+    display: block;
+    font-family: var(--font-general);
+    font-weight: bold;
+    text-align: right;
+}
+
+/* Opcional: Un estilo para campos inválidos */
+input:invalid:not(:placeholder-shown),
+select:invalid:not(:has(option:checked[value=""])),
+textarea:invalid:not(:placeholder-shown) {
+    border-color: var(--color-secundario-accion);
+    box-shadow: 0 0 5px var(--color-secundario-accion);
+}
+
+/* Filtros */
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    padding: 15px;
+    background-color: #0F375F;
+    border-radius: 5px;
+    border: 1px dashed var(--color-borde);
+    color: var(--color-texto-claro);
+}
+
+.filtros label {
+    margin-right: 5px;
+    font-family: var(--font-general);
+    flex-shrink: 0;
+}
+
+.filtros select,
+.filtros input[type="date"] {
+    flex-grow: 1;
+    min-width: 120px;
+    max-width: 200px;
+}
+/* Asegura que el botón limpiar se ajuste */
+#limpiarFiltros {
+    background-color: var(--color-secundario-accion);
+    color: var(--color-texto-claro);
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-general);
+    transition: background-color 0.3s ease;
+    border: 1px solid #C0392B;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#limpiarFiltros:hover {
+    background-color: #c0392b;
+}
+
+/* Contenedor de tareas (donde se mostrarán) */
+#contenedorTareas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Estilo para cada tarjeta de tarea */
+.tarea-item {
+    background-color: #1A4D7A;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--color-sombra);
+    border: 2px solid var(--color-borde);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: var(--color-texto-claro);
+}
+
+.tarea-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px var(--color-sombra);
+}
+
+.tarea-item h3 {
+    color: var(--color-primario-accion);
+    font-family: var(--font-pixel);
+    margin-top: 0;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--color-borde);
+    padding-bottom: 5px;
+    word-wrap: break-word;
+}
+
+.tarea-item p {
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    color: var(--color-texto-claro);
+}
+
+.tarea-item .prioridad,
+.tarea-item .departamento,
+.tarea-item .estado-tarea {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    word-wrap: break-word;
+}
+
+
+.estado-Pendiente { background-color: var(--color-secundario-accion);
+font-weight: 600; }
+.estado-Realizada { background-color: #2ecc71; }
+
+.tarea-item button.marcar-realizada {
+    background-color: var(--color-primario-accion);
+    color: #000;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-family: var(--font-pixel);
+    margin-top: 15px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    align-self: flex-start;
+    border: 2px solid #DDB800;
+    white-space: nowrap;
+}
+
+.tarea-item button.marcar-realizada:hover {
+    background-color: #ffde00;
+    transform: translateY(-2px);
+}
+
+/* Estilos para el estado "Realizada" */
+#tablaTareas .estado-Realizada {
+    background-color: #057433; /* Fondo verde */
+    color: #ffffff; /* Color del texto, ahora negro */
+    font-weight: 800;
+}
+/* ... (tu CSS existente) ... */
+
+.tarea-item.realizada {
+    opacity: 0.7; /* Hace que las tareas completadas se vean un poco atenuadas */
+    border-color: #2ecc71; /* Un borde verde para indicar completado */
+    background-color: #0B2A4A; /* Un color de fondo un poco diferente */
+}
+
+/* Opcional: Estilo para el mensaje cuando no hay tareas */
+.no-tasks-message {
+    color: var(--color-texto-claro);
+    font-size: 1.1em;
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #1A4D7A;
+    border-radius: 8px;
+    border: 1px dashed var(--color-primario-accion);
+}
+
+footer {
+    background-color: var(--color-fondo-secundario);
+    color: var(--color-texto-claro);
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+    margin-top: auto;
+    border-top: 3px solid var(--color-primario-accion);
+    box-shadow: 0 -4px 8px var(--color-sombra);
+    flex-shrink: 0;
+}
+
+footer p {
+    font-size: 0.9em;
+    margin: 0;
+    font-family: var(--font-general);
+}
+
+
+
+.generar-boleta {
+    background-color: var(--color-terciario-accion); /* Un color que combine con tu tema */
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.generar-boleta:hover {
+    background-color: #6a1a72; /* Un tono más oscuro al pasar el ratón */
+}
+
+
+/* ==================================== */
+/* Media Queries para Responsividad Optimizada */
+/* ==================================== */
+
+/* Para pantallas grandes (desktop) */
+@media (min-width: 901px) {
+    .main-header {
+        flex-direction: column;
+        padding: 15px 20px;
+    }
+
+    .main-nav-section ul {
+        max-width: 900px;
+    }
+}
+
+
+/* Para tablets en modo vertical y móviles grandes (menos de 900px) */
+@media (max-width: 900px) {
+    .main-header {
+        padding: 15px 15px 10px 15px;
+    }
+    .main-header h1 {
+        font-size: 1.6em;
+    }
+    .main-header p {
+        font-size: 0.8em;
+    }
+
+    .main-nav-section {
+        padding: 10px 0;
+    }
+
+    .main-nav-section ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .main-nav-section ul li a {
+        font-size: 0.9em;
+        justify-content: center;
+        padding: 12px 15px;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .main-container {
+        padding: 0 15px;
+    }
+
+    .page-section {
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+
+    .filtros {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .filtros label {
+        width: 100%;
+        margin-right: 0;
+        text-align: left;
+    }
+
+    .filtros select,
+    .filtros input[type="date"],
+    #limpiarFiltros {
+        width: 100%;
+        max-width: none;
+        margin-bottom: 0;
+    }
+
+    button[type="submit"] {
+        font-size: 1em;
+        padding: 10px 15px;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .tarea-item {
+        padding: 15px;
+    }
+
+    #contenedorTareas {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Para móviles muy pequeños (menos de 480px) */
+@media (max-width: 480px) {
+    .main-header h1 {
+        font-size: 1.3em;
+    }
+    .main-header p {
+        font-size: 0.75em;
+    }
+
+    .main-nav-section ul li a {
+        font-size: 0.85em;
+        padding: 10px 12px;
+    }
+    .main-nav-section ul li a i {
+        font-size: 1em;
+    }
+
+    .page-section {
+        padding: 15px;
+    }
+
+    .tarea-item h3 {
+        font-size: 1em;
+    }
+    .tarea-item p {
+        font-size: 0.85em;
+    }
+    .tarea-item button.marcar-realizada {
+        font-size: 0.8em;
+    }
+
+    .filtros label,
+    .filtros select,
+    .filtros input[type="date"],
+    #limpiarFiltros {
+        font-size: 0.9em;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Nueva animación para el botón activo */
+@keyframes activePulse {
+    0% {
+        box-shadow: 0 0 10px var(--color-primario-accion);
+        transform: scale(1.05);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--color-primario-accion), 0 0 30px rgba(255, 245, 49, 0.7); /* Más brillo */
+        transform: scale(1.06);
+    }
+    100% {
+        box-shadow: 0 0 10px var(--color-primario-accion);
+        transform: scale(1.05);
+    }
+}
+/* Agrega un contenedor para la tabla si es necesario */
+.tabla-contenedor {
+    overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+}
+
+/* Estilos para la tabla */
+
+#tablaTareas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #1A4D7A;
+    color: var(--color-texto-claro);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px var(--color-sombra);
+    border: 2px solid var(--color-borde);
+    font-size: 0.9em;
+    table-layout: fixed; /* Agrega esta propiedad para fijar el ancho de las celdas */
+}
+
+/* Encabezados de la tabla */
+#tablaTareas thead th {
+    background-color: #0F375F;
+    color: var(--color-texto-claro);
+    border-bottom: 2px solid var(--color-primario-accion);
+    padding: 12px;
+    text-align: center;
+    font-family: var(--font-pixel);
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+/* Celdas de la tabla */
+#tablaTareas td {
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    vertical-align: center; /* Alinea el contenido de las celdas en la parte superior */
+}
+
+/* Ajuste de anchos para columnas específicas */
+/* Puedes ajustar los porcentajes según tus necesidades */
+/* Ajuste de anchos para columnas específicas */
+#tablaTareas th:nth-child(1), #tablaTareas td:nth-child(1) {
+    width: 12%; /* Título */
+    font-weight: bold;
+    text-align: center;
+}
+
+#tablaTareas th:nth-child(2), #tablaTareas td:nth-child(2) {
+    width: 30%; /* Descripción: Reduce el ancho para dar espacio a otras columnas */
+    text-align: center;
+}
+
+#tablaTareas th:nth-child(3), #tablaTareas td:nth-child(3) {
+    width: 8%; /* Fecha */
+    text-align: center;
+}
+
+#tablaTareas th:nth-child(4), #tablaTareas td:nth-child(4) {
+    width: 8%; /* Departamento */
+    text-align: center;
+}
+
+#tablaTareas th:nth-child(5), #tablaTareas td:nth-child(5) {
+    width: 9%; /* Usuario */
+    text-align: center;
+}
+
+#tablaTareas th:nth-child(6), #tablaTareas td:nth-child(6) {
+    width: 7%; /* Estado: Asegúrate de que tenga suficiente espacio para la palabra "Realizada" */
+    text-align: center;
+
+}
+
+/* Celda de Acciones: Asegúrate de que tenga espacio para los botones */
+#tablaTareas th:nth-child(7), #tablaTareas td:nth-child(7) {
+    width: 10%; 
+    text-align: center;
+}
+
+/* Estilo para la celda de acciones (botones) */
+/* Estilos para los botones dentro de la tabla */
+#tablaTareas .marcar-realizada,
+#tablaTareas .generar-boleta {
+    background-color: #000000;
+    color: #fff;
+    margin-top: 5px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    width: 100%; /* Asegura que el botón ocupe todo el ancho de la celda */
+    box-sizing: border-box; /* Incluye el padding en el ancho */
+    text-align: center; /* Alinea el texto en el centro del botón */
+    font-weight: 400;
+}
+
+/* Estilo de hover para los botones de la tabla */
+#tablaTareas .generar-boleta:hover {
+    background-color: #fff531f9; /* Un tono de azul oscuro para el hover */
+    color: #000;
+    font-weight: 700;
+}
