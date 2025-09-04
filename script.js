@@ -334,8 +334,6 @@ const handleGenerateForm = async (e) => {
         }
     };*/
 
-
-
     //NUEVA FUNCIÓN---------------------------------------------------
     const fetchAndDisplayTasks = async () => {
     // Apunta al nuevo elemento de mensaje de carga
