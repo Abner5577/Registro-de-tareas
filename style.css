@@ -289,7 +289,7 @@ button[type="submit"]:hover {
 .error-message {
     color: var(--color-secundario-accion);
     font-size: 0.85em;
-    margin-top: -10px;
+    margin-top: 5px;
     margin-bottom: 5px;
     display: block;
     font-family: var(--font-general);
