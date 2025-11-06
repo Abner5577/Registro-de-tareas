@@ -1,7 +1,7 @@
 // script.js
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuToPig6bopy5ygFAfPRF5pW2xs8inOSV_pSOIL8Yy0AhR7-aS28obq-hlBEG7B0hHaA/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const tareaForm = document.getElementById('tareaForm');
