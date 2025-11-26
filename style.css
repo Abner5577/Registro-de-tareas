@@ -696,17 +696,27 @@ footer p {
 
 /* Estilo para la BOLETA (contenedor oculto que se usará como plantilla) */
 .boleta-soporte-template {
-    /* Ocultar por defecto para que solo se use al generar el PDF */
-    display: none;
-    /* Estilos de Media Carta (aproximadamente 140mm x 215.9mm) */
-    width: 140mm;
-    height: 200mm; /* Deja espacio para dos boletas en A4 (297mm) */
+    width: 190mm; /* Ancho para caber bien en A4 con márgenes */
+    height: 140mm; /* El alto de la media carta */
     padding: 10mm;
-    border: 1px solid #000;
+    border: 1px solid #ddd;
     margin: 5mm auto;
-    background-color: white;
+    background-color: white; /* MUY IMPORTANTE, ayuda a html2canvas */
     color: black;
     box-shadow: none;
+    font-family: var(--font-general);
+    font-size: 12pt;
+}
+
+.boleta-soporte-template h2 {
+    color: #0B2A4A;
+    font-family: var(--font-general);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.boleta-soporte-template hr {
+    border-top: 1px solid #fff531f9;
 }
 
 /* Estilos de impresión para el contenido final del PDF */

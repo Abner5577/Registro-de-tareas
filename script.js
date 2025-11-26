@@ -1,53 +1,47 @@
-// script.js
+// script.js (VERSIÓN 3)
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
 // ------------------------------------------------------------------
-// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES (SOLUCIÓN DEL ERROR)
+// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES 
 // ------------------------------------------------------------------
 
-// Declaración global de allTasks para que sea accesible por handleGenerateAllForms
 let allTasks = []; 
+let uniqueDepartments = []; // La moveremos al ámbito global también por consistencia.
 
-// Función para obtener y mostrar la fecha formateada (Acceso Global)
 const formatDateForDisplay = (dateValue) => {
     if (!dateValue) return '';
-    // Si dateValue viene como objeto Date (de Apps Script timestamp)
     if (dateValue instanceof Date) {
         return dateValue.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
-    // Si viene como string (de input date o de Sheets como string YYYY-MM-DD)
     const date = new Date(dateValue);
-    // Asegurarse de que el objeto Date es válido antes de formatear
     if (isNaN(date)) return dateValue; 
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-// Función auxiliar para obtener la fecha en formato YYYY-MM-DD (Acceso Global)
 const getFormattedDateForComparison = (dateValue) => {
     if (!dateValue) return '';
     let date;
     if (dateValue instanceof Date) {
         date = dateValue;
     } else {
-        // Asume que dateValue es una string 'YYYY-MM-DD' o similar
         date = new Date(dateValue);
     }
-    // Si el objeto Date no es válido, devuelve la cadena original.
     if (isNaN(date)) return dateValue; 
     
-    // Ajusta la fecha a la zona horaria UTC para evitar problemas con la hora local
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    // Usar la fecha local sin forzar UTC para evitar desplazamiento de un día
+    // Esto es vital para que la comparación del filtro de fecha funcione correctamente.
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 
-// Plantilla HTML de una boleta (Acceso Global)
 const createFormHTML = (task) => {
+    // Aseguramos que el contenedor tenga un fondo blanco para html2canvas
     return `
-        <div class="boleta-soporte-template">
+        <div class="boleta-soporte-template" style="background-color: white;">
             <h2 style="text-align: center; color: #0B2A4A; font-family: 'Poppins', sans-serif;">Boleta de Soporte Técnico</h2>
             <hr style="border: 1px solid #fff531f9; margin-bottom: 15px;">
             
@@ -69,9 +63,9 @@ const createFormHTML = (task) => {
     `;
 };
 
-// Función para generar todas las boletas en un solo PDF (Acceso Global)
+// ** FUNCIÓN PRINCIPAL DE GENERACIÓN DE PDF (SOLUCIÓN DEL ERROR jsPDF.scale) **
 const handleGenerateAllForms = async () => {
-    // allTasks es accesible globalmente
+    // Filtrar tareas que tengan el estado correcto.
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
@@ -84,12 +78,11 @@ const handleGenerateAllForms = async () => {
     button.textContent = 'Generando PDF (Espere)...';
 
     try {
-        // Inicializar jsPDF (Necesita que las librerías estén en el HTML)
-        // window.jspdf.jsPDF es necesario porque jspdf está cargado como un módulo UMD
         const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
         let firstPage = true;
-        const boletaHeight_mm = 148.5; // La mitad de un A4 (297mm / 2)
-        const imgWidth_mm = 190; // Ancho para caber en A4 con 10mm de margen (210-20)
+        const A4_HEIGHT_MM = 297;
+        const BOLETA_HEIGHT_MM = 148.5; // La mitad de un A4
+        const IMG_WIDTH_MM = 190; // Ancho para caber en A4 con 10mm de margen (210-20)
 
         for (let i = 0; i < tasksToGenerate.length; i++) {
             const task = tasksToGenerate[i];
@@ -97,47 +90,56 @@ const handleGenerateAllForms = async () => {
             
             // 1. Crear elemento temporal en el DOM
             const tempContainer = document.createElement('div');
-            // Necesitamos asegurarnos de que el estilo de la plantilla sea visible
-            // para html2canvas (aunque el contenedor principal pueda estar oculto)
+            // Es CRÍTICO darle dimensiones para que html2canvas pueda renderizar correctamente
+            // Lo hacemos visible pero fuera de la vista
             tempContainer.style.position = 'absolute';
-            tempContainer.style.left = '-9999px';
-            tempContainer.style.width = '210mm'; // Darle un ancho de página A4
+            tempContainer.style.left = '0';
+            tempContainer.style.top = '0';
+            tempContainer.style.width = '210mm'; // Ancho de página A4
+            tempContainer.style.height = '300mm'; // Alto de página A4 (o más)
+            tempContainer.style.zIndex = '-1000'; // Asegurar que no moleste a la UI
             tempContainer.innerHTML = boletaHTML;
             document.body.appendChild(tempContainer);
 
-            // Selecciona el elemento que tiene la clase de la plantilla y es hijo del contenedor temporal
             const elementToCapture = tempContainer.querySelector('.boleta-soporte-template');
             
             // 2. Capturar con html2canvas
             const canvas = await window.html2canvas(elementToCapture, {
-                scale: 3, // Mayor escala para mejor calidad
+                scale: 3, 
                 useCORS: true,
                 logging: false,
-                backgroundColor: 'white' // Asegura un fondo blanco
+                // backgroundColor: 'white' // Ya lo definimos en el HTML, pero no está de más
             });
 
-            // 3. Determinar posición
+            // 3. Obtener datos y dimensiones (¡Punto crítico de validación!)
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            const imgHeight = (canvas.height * imgWidth_mm) / canvas.width;
+            
+            // Calculamos la altura manteniendo la relación de aspecto
+            let imgHeight = (canvas.height * IMG_WIDTH_MM) / canvas.width;
 
-            let yPos = 5; 
+            // ** VALIDACIÓN CLAVE **
+            if (isNaN(imgHeight) || imgHeight <= 0) {
+                console.error(`Error: Dimensiones de canvas inválidas para la tarea #${i+1}. width: ${canvas.width}, height: ${canvas.height}`);
+                document.body.removeChild(tempContainer); // Limpiar
+                continue; // Saltar esta boleta y continuar con la siguiente
+            }
+            // ************************
+
+            let yPos = 10; // Margen superior de 10mm
 
             if (i % 2 === 0) {
                 // Boleta Impar (primera en la página)
                 if (!firstPage) {
                     pdf.addPage();
                 }
-                yPos = 5; // Posición superior (margen superior de 5mm)
+                yPos = 10; // Posición superior (margen superior de 10mm)
             } else {
                 // Boleta Par (segunda en la página)
-                yPos = boletaHeight_mm + 5; // Posición inferior (mitad de la página + margen)
+                yPos = BOLETA_HEIGHT_MM + 10; // Mitad de la página + margen de 10mm
             }
             
             // 4. Añadir imagen al PDF
-            // Este addImage es la línea que generó el error Invalid argument,
-            // pero al arreglar el ReferenceError y asegurar que la data existe,
-            // debería funcionar. Usamos el ancho y el alto calculado.
-            pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); 
+            pdf.addImage(imgData, 'JPEG', 10, yPos, IMG_WIDTH_MM, imgHeight); 
 
             // 5. Limpiar
             document.body.removeChild(tempContainer);
@@ -149,7 +151,7 @@ const handleGenerateAllForms = async () => {
         alert('PDF de boletas consolidadas generado con éxito! 🎉');
 
     } catch (error) {
-        console.error('Error al generar PDF consolidado:', error);
+        console.error('Error CRÍTICO al generar PDF consolidado:', error);
         alert('Hubo un error crítico al generar el PDF. Revise la consola. 💥'); 
     } finally {
         button.disabled = false;
@@ -159,7 +161,7 @@ const handleGenerateAllForms = async () => {
 
 
 // ------------------------------------------------------------------
-// INICIO DEL DOMContentLoaded (Ahora solo tiene la lógica de la UI y los listeners)
+// INICIO DEL DOMContentLoaded (Mantenemos la lógica principal de la UI)
 // ------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -173,21 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroFecha = document.getElementById('filtroFecha');
     const limpiarFiltrosBtn = document.getElementById('limpiarFiltros');
 
-    // allTasks ahora es una variable GLOBAL (arriba)
-    let uniqueDepartments = []; // Variable local (no se usa globalmente)
 
-    // Función para manejar la visibilidad de las secciones
     const showSection = (sectionToShow) => {
         formTareasSection.classList.remove('active');
         listaTareasSection.classList.remove('active');
         sectionToShow.classList.add('active');
     };
 
-    // Función para validar campos requeridos (reutilizable)
     const validateRequired = (value) => value.trim() !== '';
     validateRequired.message = 'Este campo es obligatorio.';
 
-    // Setup de validaciones en tiempo real para el formulario de ingreso
     const setupValidation = (inputElement, errorElementId, validationFn) => {
         const errorElement = document.getElementById(errorElementId);
         inputElement.addEventListener('input', () => {
@@ -218,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const usuarioSoporte = document.getElementById('usuarioSoporte');
 
             let isValid = true;
-            // Re-validar todos los campos al enviar
             if (!validateRequired(fechaAsignacion.value)) { isValid = false; fechaAsignacion.classList.add('invalid'); document.getElementById('errorFechaAsignacion').textContent = validateRequired.message; } else { fechaAsignacion.classList.remove('invalid'); document.getElementById('errorFechaAsignacion').textContent = ''; }
             if (!validateRequired(tituloActividad.value)) { isValid = false; tituloActividad.classList.add('invalid'); document.getElementById('errorTituloActividad').textContent = validateRequired.message; } else { tituloActividad.classList.remove('invalid'); document.getElementById('errorTituloActividad').textContent = ''; }
             if (!validateRequired(departamento.value)) { isValid = false; departamento.classList.add('invalid'); document.getElementById('errorDepartamento').textContent = validateRequired.message; } else { departamento.classList.remove('invalid'); document.getElementById('errorDepartamento').textContent = ''; }
@@ -230,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const formData = new FormData();
-            formData.append('action', 'saveTask'); // Indicar la acción para Apps Script
+            formData.append('action', 'saveTask'); 
             formData.append('fechaAsignacion', fechaAsignacion.value);
             formData.append('tituloActividad', tituloActividad.value);
             formData.append('descripcion', descripcion.value);
@@ -248,12 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (result.status === 'success') {
                     alert('¡Tarea guardada con éxito! 🥳🎉 Puedes visualizarla en Ver tareas 📒');
                     tareaForm.reset();
-                    // Limpiar mensajes de error
                     document.getElementById('errorFechaAsignacion').textContent = '';
                     document.getElementById('errorTituloActividad').textContent = '';
                     document.getElementById('errorDepartamento').textContent = '';
                     document.getElementById('errorUsuarioSoporte').textContent = '';
-                    // También, si estamos en la vista de tareas, recargar para ver la nueva
                     if (listaTareasSection.classList.contains('active')) {
                         await fetchAndDisplayTasks();
                     }
@@ -279,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tasksToRender.length === 0) {
             mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
             mensajeCarga.style.display = 'block';
-            // Colspan="7" para las 7 columnas actuales
             tablaBody.innerHTML = '<tr><td colspan="7" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
             document.getElementById('tablaTareas').style.display = 'table'; 
             return;
@@ -334,8 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Generar Boleta de Soporte (Función anterior que usa Apps Script) ---
-    // Mantenemos esta aquí, ya que no usa ninguna función que deba ser global.
+    // --- Generar Boleta de Soporte (Unidad) ---
     const handleGenerateForm = async (e) => {
         const button = e.target;
         const rowIndex = button.dataset.rowIndex;
@@ -345,13 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
             button.textContent = 'Generando...';
 
             try {
-                // Hacemos una solicitud GET con la acción 'generateForm' y el rowIndex
                 const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateForm&rowIndex=${rowIndex}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
                     alert('Boleta generada con éxito. Abriendo en una nueva pestaña...');
-                    // Abrir la URL del PDF en una nueva pestaña para que el usuario pueda ver/descargar/imprimir
                     window.open(result.pdfUrl, '_blank');
                 } else {
                     alert('Error al generar la boleta: ' + result.message);
@@ -360,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error de red al generar la boleta:', error);
                 alert('Hubo un problema de conexión al generar la boleta.');
             } finally {
-                button.disabled = false; // Re-habilitar el botón
+                button.disabled = false; 
                 button.textContent = 'Generar Boleta';
             }
         }
@@ -383,11 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.status === 'success') {
-                // Asigna las tareas a la variable GLOBAL allTasks
                 allTasks = result.tasks.map(task => { 
                     if (task.fechaAsignacion) {
-                        // Nota: getFormattedDateForComparison también es global y accesible
                         task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
+                    }
+                    // IMPORTANTE: Si Apps Script no devuelve un estado, se lo asignamos.
+                    // Esto ayuda a solucionar el problema de la columna "undefined"
+                    if (!task.estado) {
+                         task.estado = 'Pendiente'; 
                     }
                     return task;
                 });
@@ -411,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.status === 'success') {
-                uniqueDepartments = result.departments;
+                uniqueDepartments = result.departments; // Usa la variable global
                 populateDepartmentFilter();
             } else {
                 console.error('Error al cargar departamentos:', result.message);
@@ -422,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const populateDepartmentFilter = () => {
-        filtroDepartamento.innerHTML = '<option value="Todos">Todos</option>'; // Restablecer
+        filtroDepartamento.innerHTML = '<option value="Todos">Todos</option>'; 
         uniqueDepartments.forEach(dept => {
             const option = document.createElement('option');
             option.value = dept;
@@ -434,22 +427,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Manejo de filtros ---
     const applyFiltersAndRender = () => {
-        // Usa la variable GLOBAL allTasks
         let filteredTasks = [...allTasks]; 
 
-        // Filtrar por estado
         const estadoSeleccionado = filtroEstado.value;
         if (estadoSeleccionado !== 'Todas') {
             filteredTasks = filteredTasks.filter(task => task.estado === estadoSeleccionado);
         }
 
-        // Filtrar por departamento
         const departamentoSeleccionado = filtroDepartamento.value;
         if (departamentoSeleccionado !== 'Todos') {
             filteredTasks = filteredTasks.filter(task => task.departamento === departamentoSeleccionado);
         }
 
-        // Filtrar por fecha
         const fechaSeleccionada = filtroFecha.value; 
         if (fechaSeleccionada) {
             filteredTasks = filteredTasks.filter(task => {
@@ -509,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
-    // Conecta el botón a la función handleGenerateAllForms (que ahora es global)
+    // Conecta el botón a la función handleGenerateAllForms (que es global)
     document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
 
     // --- Manejo de la navegación ---
