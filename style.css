@@ -445,7 +445,7 @@ footer p {
 
 
 .generar-boleta {
-    background-color: var(#000); /* Un color que combine con tu tema */
+    background-color:#000; /* Un color que combine con tu tema */
     color: #fff;
     border: none;
     padding: 8px 15px;
