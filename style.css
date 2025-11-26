@@ -702,60 +702,25 @@ footer p {
 /* Puedes ajustar los porcentajes según tus necesidades */
 /* Ajuste de anchos para columnas específicas */
 #tablaTareas th:nth-child(1), #tablaTareas td:nth-child(1) {
-    width: 12%; /* Título */
-    font-weight: bold;
-    text-align: center;
+    width: 25%; /* Título (Aumentado de 20%) */
 }
 
 #tablaTareas th:nth-child(2), #tablaTareas td:nth-child(2) {
-    width: 30%; /* Descripción: Reduce el ancho para dar espacio a otras columnas */
-    text-align: center;
+    width: 38%; /* Descripción (Aumentado de 35%) */
 }
 
 #tablaTareas th:nth-child(3), #tablaTareas td:nth-child(3) {
-    width: 8%; /* Fecha */
-    text-align: center;
+    width: 10%; /* Fecha (Aumentado de 8%) */
 }
 
 #tablaTareas th:nth-child(4), #tablaTareas td:nth-child(4) {
-    width: 8%; /* Departamento */
-    text-align: center;
+    width: 10%; /* Departamento (Aumentado de 8%) */
 }
 
 #tablaTareas th:nth-child(5), #tablaTareas td:nth-child(5) {
-    width: 9%; /* Usuario */
-    text-align: center;
+    width: 17%; /* Usuario (Aumentado de 9%) */
 }
 
-#tablaTareas th:nth-child(6), #tablaTareas td:nth-child(6) {
-    width: 7%; /* Estado: Asegúrate de que tenga suficiente espacio para la palabra "Realizada" */
-    text-align: center;
-
-}
-
-/* Celda de Acciones: Asegúrate de que tenga espacio para los botones */
-#tablaTareas th:nth-child(7), #tablaTareas td:nth-child(7) {
-    width: 10%; 
-    text-align: center;
-}
-
-/* Estilo para la celda de acciones (botones) */
-/* Estilos para los botones dentro de la tabla */
-#tablaTareas .marcar-realizada,
-#tablaTareas .generar-boleta {
-    background-color: #000000;
-    color: #fff;
-    margin-top: 5px;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    width: 100%; /* Asegura que el botón ocupe todo el ancho de la celda */
-    box-sizing: border-box; /* Incluye el padding en el ancho */
-    text-align: center; /* Alinea el texto en el centro del botón */
-    font-weight: 400;
-}
 
 /* Estilo de hover para los botones de la tabla */
 #tablaTareas .generar-boleta:hover {

@@ -238,17 +238,12 @@ const renderTasks = (tasksToRender) => {
 };*/
 //------------Versión actualizada-----------------------------------
 const renderTasks = (tasksToRender) => {
-    // Apunta al tbody de la nueva tabla
-    const tablaBody = document.querySelector('#tablaTareas tbody');
-    const mensajeCarga = document.getElementById('mensaje-carga');
+   const tablaBody = document.querySelector('#tablaTareas tbody');
+    tablaBody.innerHTML = ''; // Limpiar la tabla
     
-    // Limpiar el cuerpo de la tabla antes de agregar las nuevas filas
-    tablaBody.innerHTML = '';
 
-    if (tasksToRender.length === 0) {
-        mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
-        mensajeCarga.style.display = 'block';
-        document.getElementById('tablaTareas').style.display = 'none'; 
+    if (tasks.length === 0) {
+        tablaBody.innerHTML = '<tr><td colspan="5" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
         return;
     }
 
@@ -256,40 +251,12 @@ const renderTasks = (tasksToRender) => {
     document.getElementById('tablaTareas').style.display = 'table'; 
 
     tasksToRender.forEach(task => {
-        const fila = document.createElement('tr');
-        if (task.estado === 'Realizada') {
-            fila.classList.add('realizada');
-        }
-
-        fila.innerHTML = `
-            <td>${task.tituloActividad}</td>
-            <td>${task.descripcion || 'N/A'}</td>
-            <td>${formatDateForDisplay(task.fechaAsignacion)}</td>
-            <td>${task.departamento}</td>
-            <td>${task.usuarioSoporte}</td>
-            <td class="estado-${task.estado}">
-                <span class="estado-tarea">${task.estado}</span>
-            </td>
-        `;
-        
-        // Crea una celda para los botones de acción
-        const actionCell = document.createElement('td');
-        actionCell.classList.add('task-actions-cell');
-        
-        // Crea los botones y los añade a la celda
-        // Si la tarea está Pendiente, agrega el botón de "Marcar Realizada"
-        if (task.estado === 'Pendiente') {
-            const markDoneButton = document.createElement('button');
-            markDoneButton.textContent = 'Marcar Realizada';
-            markDoneButton.classList.add('marcar-realizada');
-            markDoneButton.dataset.rowIndex = task.rowIndex;
-            markDoneButton.addEventListener('click', handleMarkAsCompleted);
-            actionCell.appendChild(markDoneButton);
-        }
-          
-        fila.appendChild(actionCell);
-
-        tablaBody.appendChild(fila);
+        const row = tablaBody.insertRow();
+        row.insertCell().textContent = task.tituloActividad;
+        row.insertCell().textContent = task.descripcion;
+        row.insertCell().textContent = formatDateForDisplay(task.fechaAsignacion);
+        row.insertCell().textContent = task.departamento;
+        row.insertCell().textContent = task.usuarioSoporte;
     });
 };
 // Archivo: script.js (Añadir dentro de document.addEventListener, después de handleGenerateForm)
