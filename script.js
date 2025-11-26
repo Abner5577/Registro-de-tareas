@@ -3,10 +3,47 @@
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec';
 
-// Archivo: script.js (Añadir antes de document.addEventListener)
+
+// Formatear fecha para visualización (solo para mostrar, no para comparar)
+    const formatDateForDisplay = (dateValue) => {
+        if (!dateValue) return '';
+        // Si dateValue viene como objeto Date (de Apps Script timestamp)
+        if (dateValue instanceof Date) {
+            return dateValue.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+        // Si viene como string (de input date o de Sheets como string YYYY-MM-DD)
+        const date = new Date(dateValue);
+        return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+        // Función auxiliar para obtener la fecha en formato YYYY-MM-DD
+    const getFormattedDateForComparison = (dateValue) => {
+        if (!dateValue) return '';
+        let date;
+        if (dateValue instanceof Date) {
+            date = dateValue;
+        } else {
+            // Asume que dateValue es una string 'YYYY-MM-DD' o similar
+            date = new Date(dateValue);
+        }
+        // Ajusta la fecha a la zona horaria UTC para evitar problemas con la hora local
+        // y obtener un formato consistente YYYY-MM-DD
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+
+    // Archivo: script.js (Añadir después de las funciones de fecha y antes de GOOGLE_APPS_SCRIPT_URL)
+
+// ------------------------------------------------------------------
+// NUEVAS FUNCIONES PARA GENERACIÓN DE PDF CONSOLIDADO
+// ------------------------------------------------------------------
 
 // Función para crear el HTML de una sola boleta (Media Carta)
 const createFormHTML = (task) => {
+    // Nota: formatDateForDisplay ahora es accesible
     return `
         <div class="boleta-soporte-template">
             <h2 style="text-align: center; color: #0B2A4A; font-family: 'Poppins', sans-serif;">Boleta de Soporte Técnico</h2>
@@ -29,6 +66,82 @@ const createFormHTML = (task) => {
         </div>
     `;
 };
+
+// Función para generar todas las boletas en un solo PDF (2 por página)
+const handleGenerateAllForms = async () => {
+    // Filtra las tareas para que solo genere las 'Realizada'
+    const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
+    
+    if (tasksToGenerate.length === 0) {
+        alert("No hay tareas realizadas para generar boletas.");
+        return;
+    }
+
+    const button = document.getElementById('generarTodasLasBoletas');
+    button.disabled = true;
+    button.textContent = 'Generando PDF (Espere)...';
+
+    try {
+        // Inicializar jsPDF (Tamaño A4 en orientación vertical)
+        const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+        let firstPage = true;
+        const boletaHeight_mm = 148.5; // La mitad de un A4 (297mm / 2)
+        const imgWidth_mm = 190; // Ancho para caber en A4 con 10mm de margen (210-20)
+
+        for (let i = 0; i < tasksToGenerate.length; i++) {
+            const task = tasksToGenerate[i];
+            const boletaHTML = createFormHTML(task);
+            
+            // 1. Crear elemento temporal en el DOM
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = boletaHTML;
+            document.body.appendChild(tempContainer);
+            
+            // 2. Capturar con html2canvas
+            const canvas = await window.html2canvas(tempContainer.querySelector('.boleta-soporte-template'), {
+                scale: 3, // Mayor escala para mejor calidad
+                useCORS: true,
+                logging: false
+            });
+
+            // 3. Determinar posición
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const imgHeight = (canvas.height * imgWidth_mm) / canvas.width;
+
+            let yPos = 5; // Posición superior
+
+            if (i % 2 === 0) {
+                // Boleta Impar (primera en la página)
+                if (!firstPage) {
+                    pdf.addPage();
+                }
+                yPos = 5; // Posición superior
+            } else {
+                // Boleta Par (segunda en la página)
+                yPos = boletaHeight_mm + 5; // Posición inferior (mitad de la página + margen)
+            }
+            
+            // 4. Añadir imagen al PDF
+            pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); // 10mm de margen X
+
+            // 5. Limpiar
+            document.body.removeChild(tempContainer);
+            firstPage = false;
+        }
+
+        // 6. Guardar el PDF final
+        pdf.save("Boletas_Soporte_Consolidadas.pdf");
+        alert('PDF de boletas consolidadas generado con éxito! 🎉');
+
+    } catch (error) {
+        console.error('Error al generar PDF consolidado:', error);
+        alert('Hubo un error crítico al generar el PDF. Revise la consola.');
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Generar Todas las Boletas en PDF';
+    }
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const tareaForm = document.getElementById('tareaForm');
@@ -135,38 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // --- Funciones para "Ver Tareas" ---
-
-    // Formatear fecha para visualización (solo para mostrar, no para comparar)
-    const formatDateForDisplay = (dateValue) => {
-        if (!dateValue) return '';
-        // Si dateValue viene como objeto Date (de Apps Script timestamp)
-        if (dateValue instanceof Date) {
-            return dateValue.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-        // Si viene como string (de input date o de Sheets como string YYYY-MM-DD)
-        const date = new Date(dateValue);
-        return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    };
-
-    // Función auxiliar para obtener la fecha en formato YYYY-MM-DD
-    const getFormattedDateForComparison = (dateValue) => {
-        if (!dateValue) return '';
-        let date;
-        if (dateValue instanceof Date) {
-            date = dateValue;
-        } else {
-            // Asume que dateValue es una string 'YYYY-MM-DD' o similar
-            date = new Date(dateValue);
-        }
-        // Ajusta la fecha a la zona horaria UTC para evitar problemas con la hora local
-        // y obtener un formato consistente YYYY-MM-DD
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
 
 
  // Archivo: script.js (Reemplazar la función renderTasks alrededor de la línea 170)
