@@ -4,7 +4,7 @@
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
 // ------------------------------------------------------------------
-// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES
+// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES (SOLUCIÓN DEL ERROR)
 // ------------------------------------------------------------------
 
 // Declaración global de allTasks para que sea accesible por handleGenerateAllForms
@@ -44,7 +44,7 @@ const getFormattedDateForComparison = (dateValue) => {
     return `${year}-${month}-${day}`;
 };
 
-// Plantilla HTML de una boleta
+// Plantilla HTML de una boleta (Acceso Global)
 const createFormHTML = (task) => {
     return `
         <div class="boleta-soporte-template">
@@ -69,14 +69,13 @@ const createFormHTML = (task) => {
     `;
 };
 
-// Función para generar todas las boletas en un solo PDF (2 por página)
+// Función para generar todas las boletas en un solo PDF (Acceso Global)
 const handleGenerateAllForms = async () => {
     // allTasks es accesible globalmente
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
-        // Muestra el mensaje de error que ya vimos si no hay tareas realizadas
-        alert("No hay tareas realizadas para generar boletas."); 
+        alert("No hay tareas realizadas para generar boletas. 📋"); 
         return;
     }
 
@@ -86,6 +85,7 @@ const handleGenerateAllForms = async () => {
 
     try {
         // Inicializar jsPDF (Necesita que las librerías estén en el HTML)
+        // window.jspdf.jsPDF es necesario porque jspdf está cargado como un módulo UMD
         const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
         let firstPage = true;
         const boletaHeight_mm = 148.5; // La mitad de un A4 (297mm / 2)
@@ -97,14 +97,23 @@ const handleGenerateAllForms = async () => {
             
             // 1. Crear elemento temporal en el DOM
             const tempContainer = document.createElement('div');
+            // Necesitamos asegurarnos de que el estilo de la plantilla sea visible
+            // para html2canvas (aunque el contenedor principal pueda estar oculto)
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.width = '210mm'; // Darle un ancho de página A4
             tempContainer.innerHTML = boletaHTML;
             document.body.appendChild(tempContainer);
+
+            // Selecciona el elemento que tiene la clase de la plantilla y es hijo del contenedor temporal
+            const elementToCapture = tempContainer.querySelector('.boleta-soporte-template');
             
             // 2. Capturar con html2canvas
-            const canvas = await window.html2canvas(tempContainer.querySelector('.boleta-soporte-template'), {
+            const canvas = await window.html2canvas(elementToCapture, {
                 scale: 3, // Mayor escala para mejor calidad
                 useCORS: true,
-                logging: false
+                logging: false,
+                backgroundColor: 'white' // Asegura un fondo blanco
             });
 
             // 3. Determinar posición
@@ -118,13 +127,16 @@ const handleGenerateAllForms = async () => {
                 if (!firstPage) {
                     pdf.addPage();
                 }
-                yPos = 5; // Posición superior
+                yPos = 5; // Posición superior (margen superior de 5mm)
             } else {
                 // Boleta Par (segunda en la página)
                 yPos = boletaHeight_mm + 5; // Posición inferior (mitad de la página + margen)
             }
             
             // 4. Añadir imagen al PDF
+            // Este addImage es la línea que generó el error Invalid argument,
+            // pero al arreglar el ReferenceError y asegurar que la data existe,
+            // debería funcionar. Usamos el ancho y el alto calculado.
             pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); 
 
             // 5. Limpiar
@@ -138,8 +150,7 @@ const handleGenerateAllForms = async () => {
 
     } catch (error) {
         console.error('Error al generar PDF consolidado:', error);
-        // Muestra el error crítico que vimos si hay un problema con html2canvas/jspdf
-        alert('Hubo un error crítico al generar el PDF. Revise la consola.'); 
+        alert('Hubo un error crítico al generar el PDF. Revise la consola. 💥'); 
     } finally {
         button.disabled = false;
         button.textContent = 'Generar Todas las Boletas en PDF';
@@ -148,7 +159,7 @@ const handleGenerateAllForms = async () => {
 
 
 // ------------------------------------------------------------------
-// INICIO DEL DOMContentLoaded (Aquí se re-declaran las variables locales)
+// INICIO DEL DOMContentLoaded (Ahora solo tiene la lógica de la UI y los listeners)
 // ------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -162,8 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroFecha = document.getElementById('filtroFecha');
     const limpiarFiltrosBtn = document.getElementById('limpiarFiltros');
 
-    // Variable local que se usaba anteriormente, ahora solo se usa la global `allTasks`
-    // let allTasks = []; 
+    // allTasks ahora es una variable GLOBAL (arriba)
     let uniqueDepartments = []; // Variable local (no se usa globalmente)
 
     // Función para manejar la visibilidad de las secciones
@@ -284,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fila.classList.add('realizada');
             }
 
+            // Nota: Aquí se usa la función global formatDateForDisplay
             fila.innerHTML = `
                 <td>${task.tituloActividad}</td>
                 <td>${task.descripcion || 'N/A'}</td>
@@ -310,14 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 actionCell.appendChild(markDoneButton);
             }
             
-            // Siempre agrega el botón de "Generar Boleta"
-            // Nota: Este botón usará la función handleGenerateForm que no está en este código,
-            // pero lo dejamos por si quieres seguir usando la funcionalidad de Apps Script (generateForm)
+            // Botón de "Generar Boleta"
             const generateFormButton = document.createElement('button');
             generateFormButton.textContent = 'Generar Boleta';
             generateFormButton.classList.add('generar-boleta');
             generateFormButton.dataset.rowIndex = task.rowIndex;
-            //generateFormButton.addEventListener('click', handleGenerateForm); // Descomentar si usas la función de boleta individual
+            generateFormButton.addEventListener('click', handleGenerateForm);
             actionCell.appendChild(generateFormButton);
             
             fila.appendChild(actionCell);
@@ -325,13 +334,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Generar Boleta de Soporte (Función anterior) ---
-    // La boleta individual ya no se está usando, pero puedes descomentar esto si la necesitas
-    /*
+    // --- Generar Boleta de Soporte (Función anterior que usa Apps Script) ---
+    // Mantenemos esta aquí, ya que no usa ninguna función que deba ser global.
     const handleGenerateForm = async (e) => {
-        // ... (código anterior)
+        const button = e.target;
+        const rowIndex = button.dataset.rowIndex;
+
+        if (confirm('¿Estás seguro de que quieres generar la boleta de soporte para esta tarea?')) {
+            button.disabled = true;
+            button.textContent = 'Generando...';
+
+            try {
+                // Hacemos una solicitud GET con la acción 'generateForm' y el rowIndex
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateForm&rowIndex=${rowIndex}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    alert('Boleta generada con éxito. Abriendo en una nueva pestaña...');
+                    // Abrir la URL del PDF en una nueva pestaña para que el usuario pueda ver/descargar/imprimir
+                    window.open(result.pdfUrl, '_blank');
+                } else {
+                    alert('Error al generar la boleta: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error de red al generar la boleta:', error);
+                alert('Hubo un problema de conexión al generar la boleta.');
+            } finally {
+                button.disabled = false; // Re-habilitar el botón
+                button.textContent = 'Generar Boleta';
+            }
+        }
     };
-    */
 
 
     // Función para obtener y mostrar las tareas
@@ -353,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Asigna las tareas a la variable GLOBAL allTasks
                 allTasks = result.tasks.map(task => { 
                     if (task.fechaAsignacion) {
+                        // Nota: getFormattedDateForComparison también es global y accesible
                         task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
                     }
                     return task;
@@ -475,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
-    // Conecta el botón a la función handleGenerateAllForms
+    // Conecta el botón a la función handleGenerateAllForms (que ahora es global)
     document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
 
     // --- Manejo de la navegación ---
