@@ -1,49 +1,52 @@
 // script.js
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec';
-
-
-// Formatear fecha para visualización (solo para mostrar, no para comparar)
-    const formatDateForDisplay = (dateValue) => {
-        if (!dateValue) return '';
-        // Si dateValue viene como objeto Date (de Apps Script timestamp)
-        if (dateValue instanceof Date) {
-            return dateValue.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-        // Si viene como string (de input date o de Sheets como string YYYY-MM-DD)
-        const date = new Date(dateValue);
-        return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    };
-
-        // Función auxiliar para obtener la fecha en formato YYYY-MM-DD
-    const getFormattedDateForComparison = (dateValue) => {
-        if (!dateValue) return '';
-        let date;
-        if (dateValue instanceof Date) {
-            date = dateValue;
-        } else {
-            // Asume que dateValue es una string 'YYYY-MM-DD' o similar
-            date = new Date(dateValue);
-        }
-        // Ajusta la fecha a la zona horaria UTC para evitar problemas con la hora local
-        // y obtener un formato consistente YYYY-MM-DD
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-
-    // Archivo: script.js (Añadir después de las funciones de fecha y antes de GOOGLE_APPS_SCRIPT_URL)
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
 // ------------------------------------------------------------------
-// NUEVAS FUNCIONES PARA GENERACIÓN DE PDF CONSOLIDADO
+// FUNCIONES DE FECHA (MOVIDAS FUERA DEL DOMContentLoaded para ACCESO GLOBAL)
 // ------------------------------------------------------------------
 
-// Función para crear el HTML de una sola boleta (Media Carta)
+// Función para obtener y mostrar la fecha formateada (Acceso Global)
+const formatDateForDisplay = (dateValue) => {
+    if (!dateValue) return '';
+    // Si dateValue viene como objeto Date (de Apps Script timestamp)
+    if (dateValue instanceof Date) {
+        return dateValue.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+    // Si viene como string (de input date o de Sheets como string YYYY-MM-DD)
+    const date = new Date(dateValue);
+    // Asegurarse de que el objeto Date es válido antes de formatear
+    if (isNaN(date)) return dateValue; 
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+// Función auxiliar para obtener la fecha en formato YYYY-MM-DD (Acceso Global)
+const getFormattedDateForComparison = (dateValue) => {
+    if (!dateValue) return '';
+    let date;
+    if (dateValue instanceof Date) {
+        date = dateValue;
+    } else {
+        // Asume que dateValue es una string 'YYYY-MM-DD' o similar
+        date = new Date(dateValue);
+    }
+    // Si el objeto Date no es válido, devuelve la cadena original.
+    if (isNaN(date)) return dateValue; 
+    
+    // Ajusta la fecha a la zona horaria UTC para evitar problemas con la hora local
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// ------------------------------------------------------------------
+// LÓGICA DEL PDF CONSOLIDADO (AÑADIDA)
+// ------------------------------------------------------------------
+
+// Plantilla HTML de una boleta (usa la función formatDateForDisplay ahora accesible)
 const createFormHTML = (task) => {
-    // Nota: formatDateForDisplay ahora es accesible
     return `
         <div class="boleta-soporte-template">
             <h2 style="text-align: center; color: #0B2A4A; font-family: 'Poppins', sans-serif;">Boleta de Soporte Técnico</h2>
@@ -69,7 +72,7 @@ const createFormHTML = (task) => {
 
 // Función para generar todas las boletas en un solo PDF (2 por página)
 const handleGenerateAllForms = async () => {
-    // Filtra las tareas para que solo genere las 'Realizada'
+    // Filtra las tareas: SOLO aquellas con estado 'Realizada'
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
@@ -108,7 +111,7 @@ const handleGenerateAllForms = async () => {
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const imgHeight = (canvas.height * imgWidth_mm) / canvas.width;
 
-            let yPos = 5; // Posición superior
+            let yPos = 5; 
 
             if (i % 2 === 0) {
                 // Boleta Impar (primera en la página)
@@ -122,7 +125,7 @@ const handleGenerateAllForms = async () => {
             }
             
             // 4. Añadir imagen al PDF
-            pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); // 10mm de margen X
+            pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); 
 
             // 5. Limpiar
             document.body.removeChild(tempContainer);
@@ -142,6 +145,9 @@ const handleGenerateAllForms = async () => {
     }
 };
 
+// ------------------------------------------------------------------
+// INICIO DEL DOMContentLoaded
+// ------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
     const tareaForm = document.getElementById('tareaForm');
@@ -249,227 +255,93 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
- // Archivo: script.js (Reemplazar la función renderTasks alrededor de la línea 170)
-
-const renderTasks = (tasksToRender) => {
-    const tablaBody = document.querySelector('#tablaTareas tbody');
-    const mensajeCarga = document.getElementById('mensaje-carga');
+    // --- Funciones para "Ver Tareas" ---
     
-    tablaBody.innerHTML = ''; // Limpiar la tabla
-
-    if (tasksToRender.length === 0) {
-        mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
-        mensajeCarga.style.display = 'block';
-        // colspan="5" para las 5 columnas
-        tablaBody.innerHTML = '<tr><td colspan="5" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
-        document.getElementById('tablaTareas').style.display = 'table'; 
-        return;
-    }
-
-    mensajeCarga.style.display = 'none';
-    document.getElementById('tablaTareas').style.display = 'table'; 
-
-    tasksToRender.forEach(task => {
-        const fila = document.createElement('tr');
-        if (task.estado === 'Realizada') {
-            fila.classList.add('realizada');
-        }
-
-        // ** SOLO 5 CELDAS **
-        fila.innerHTML = `
-            <td>${task.tituloActividad}</td>
-            <td>${task.descripcion || 'N/A'}</td>
-            <td>${formatDateForDisplay(task.fechaAsignacion)}</td>
-            <td>${task.departamento}</td>
-            <td>${task.usuarioSoporte}</td>
-        `;
+    // Función para renderizar las tareas (ACTUALIZADA: Elimina las columnas Estado y Acciones para usar solo 5)
+    const renderTasks = (tasksToRender) => {
+        // Apunta al tbody de la tabla
+        const tablaBody = document.querySelector('#tablaTareas tbody');
+        const mensajeCarga = document.getElementById('mensaje-carga');
         
-        // ** SE ELIMINA LA CREACIÓN DE LAS CELDAS DE ESTADO Y ACCIONES **
+        // Limpiar el cuerpo de la tabla antes de agregar las nuevas filas
+        tablaBody.innerHTML = '';
 
-        tablaBody.appendChild(fila);
-    });
-};
-
-
-    // Archivo: script.js (Añadir dentro de document.addEventListener, después de handleGenerateForm)
-
-    // ** NOTA: DEBES AÑADIR LA FUNCIÓN handleGenerateAllForms() **
-    // Esta función debe ser añadida *después* de que se carguen las librerías de PDF
-
-    const handleGenerateAllForms = async () => {
-        const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); // Solo genera realizadas
-
-        if (tasksToGenerate.length === 0) {
-            alert("No hay tareas realizadas para generar boletas.");
+        if (tasksToRender.length === 0) {
+            mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
+            mensajeCarga.style.display = 'block';
+            // Colspan="5" para las 5 columnas restantes
+            tablaBody.innerHTML = '<tr><td colspan="5" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
+            document.getElementById('tablaTareas').style.display = 'table'; 
             return;
         }
 
-        const button = document.getElementById('generarTodasLasBoletas');
-        button.disabled = true;
-        button.textContent = 'Generando PDF (Espere)...';
+        mensajeCarga.style.display = 'none';
+        document.getElementById('tablaTareas').style.display = 'table'; 
 
-        try {
-            // Inicializar jsPDF (Tamaño A4 en orientación vertical)
-            const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
-            let firstPage = true;
-            const boletaHeight_mm = 148.5; // La mitad de un A4 (297mm / 2)
-            const imgWidth_mm = 190; // Ancho para caber en A4 con 10mm de margen (210-20)
-
-            for (let i = 0; i < tasksToGenerate.length; i++) {
-                const task = tasksToGenerate[i];
-                const boletaHTML = createFormHTML(task);
-
-                // 1. Crear elemento temporal en el DOM
-                const tempContainer = document.createElement('div');
-                tempContainer.innerHTML = boletaHTML;
-                document.body.appendChild(tempContainer);
-
-                // 2. Capturar con html2canvas
-                const canvas = await window.html2canvas(tempContainer.querySelector('.boleta-soporte-template'), {
-                    scale: 3, // Mayor escala para mejor calidad
-                    useCORS: true,
-                    logging: false
-                });
-
-                // 3. Determinar posición
-                const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                const imgHeight = (canvas.height * imgWidth_mm) / canvas.width;
-
-                let yPos = 5; // Posición superior
-
-                if (i % 2 === 0) {
-                    // Boleta Impar (primera en la página)
-                    if (!firstPage) {
-                        pdf.addPage();
-                    }
-                    yPos = 5; // Posición superior
-                } else {
-                    // Boleta Par (segunda en la página)
-                    yPos = boletaHeight_mm + 5; // Posición inferior (mitad de la página + margen)
-                }
-
-                // 4. Añadir imagen al PDF
-                pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth_mm, imgHeight); // 10mm de margen X
-
-                // 5. Limpiar
-                document.body.removeChild(tempContainer);
-                firstPage = false;
+        tasksToRender.forEach(task => {
+            const fila = document.createElement('tr');
+            if (task.estado === 'Realizada') {
+                fila.classList.add('realizada');
             }
 
-            // 6. Guardar el PDF final
-            pdf.save("Boletas_Soporte_Consolidadas.pdf");
-            alert('PDF de boletas consolidadas generado con éxito! 🎉');
-
-        } catch (error) {
-            console.error('Error al generar PDF consolidado:', error);
-            alert('Hubo un error crítico al generar el PDF. Revise la consola.');
-        } finally {
-            button.disabled = false;
-            button.textContent = 'Generar Todas las Boletas en PDF';
-        }
+            // ** SOLO SE INSERTAN LAS 5 CELDAS DE DATOS **
+            fila.innerHTML = `
+                <td>${task.tituloActividad}</td>
+                <td>${task.descripcion || 'N/A'}</td>
+                <td>${formatDateForDisplay(task.fechaAsignacion)}</td>
+                <td>${task.departamento}</td>
+                <td>${task.usuarioSoporte}</td>
+            `;
+            
+            tablaBody.appendChild(fila);
+        });
     };
 
 
-
-    // --- Generar Boleta de Soporte ---
-    /*const handleGenerateForm = async (e) => {
-        const button = e.target;
-        const rowIndex = button.dataset.rowIndex;
-    
-        if (confirm('¿Estás seguro de que quieres generar la boleta de soporte para esta tarea?')) {
-            button.disabled = true;
-            button.textContent = 'Generando...';
-    
-            try {
-                // Hacemos una solicitud GET con la acción 'generateForm' y el rowIndex
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateForm&rowIndex=${rowIndex}`);
-                const result = await response.json();
-    
-                if (result.status === 'success') {
-                    alert('Boleta generada con éxito. Abriendo en una nueva pestaña...');
-                    // Abrir la URL del PDF en una nueva pestaña para que el usuario pueda ver/descargar/imprimir
-                    window.open(result.pdfUrl, '_blank');
-                    button.textContent = 'Boleta Generada'; // O 'Generar Boleta' de nuevo si quieres que se pueda regenerar
-                } else {
-                    alert('Error al generar la boleta: ' + result.message);
-                    button.textContent = 'Generar Boleta';
-                }
-            } catch (error) {
-                console.error('Error de red al generar la boleta:', error);
-                alert('Hubo un problema de conexión al generar la boleta.');
-                button.textContent = 'Generar Boleta';
-            } finally {
-                button.disabled = false; // Re-habilitar el botón
-            }
-        }
+    // --- Generar Boleta de Soporte (Simple) ---
+    // Esta función ya NO es necesaria si solo usaremos handleGenerateAllForms
+    /*
+    const handleGenerateForm = async (e) => {
+        // ... (código anterior)
     };
-    
-        // Función para obtener y mostrar las tareas
-        /*const fetchAndDisplayTasks = async () => {
-            contenedorTareas.innerHTML = '<p>Cargando tareas...</p>'; // Mensaje de carga
-            try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`); // Solicitar las tareas
-                const result = await response.json();
-    
-                if (result.status === 'success') {
-                    // allTasks = result.tasks; // No es necesario re-asignar aquí si solo se usa en applyFiltersAndRender
-                    // Ajustar el formato de fecha para todas las tareas inmediatamente después de la carga
-                    allTasks = result.tasks.map(task => {
-                        if (task.fechaAsignacion) {
-                            // Apps Script devuelve fechas como objetos Date si son válidas.
-                            // Convierte a YYYY-MM-DD si aún no lo está para comparación consistente.
-                            // Si Apps Script ya devuelve string 'YYYY-MM-DD', esto también funciona.
-                            task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
-                        }
-                        return task;
-                    });
-                    applyFiltersAndRender(); // Aplicar filtros y renderizar
-                } else {
-                    contenedorTareas.innerHTML = `<p style="color: ${getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion')}">Error al cargar tareas: ${result.message}</p>`;
-                    console.error('Error al cargar tareas:', result.message);
-                }
-            } catch (error) {
-                contenedorTareas.innerHTML = `<p style="color: ${getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion')}">Hubo un problema de conexión al cargar las tareas.</p>`;
-                console.error('Error de red al cargar tareas:', error);
-            }
-        };*/
+    */
 
-    //NUEVA FUNCIÓN---------------------------------------------------
+
+    // Función para obtener y mostrar las tareas
     const fetchAndDisplayTasks = async () => {
-        // Apunta al nuevo elemento de mensaje de carga
-        const mensajeCarga = document.getElementById('mensaje-carga');
-        const tablaTareas = document.getElementById('tablaTareas');
+    // Apunta al nuevo elemento de mensaje de carga
+    const mensajeCarga = document.getElementById('mensaje-carga');
+    const tablaTareas = document.getElementById('tablaTareas');
 
-        mensajeCarga.textContent = 'Cargando tareas...'; // Mostrar mensaje de carga
-        mensajeCarga.style.display = 'block';
-        if (tablaTareas) {
-            tablaTareas.style.display = 'none'; // Oculta la tabla mientras carga
-        }
+    mensajeCarga.textContent = 'Cargando tareas...'; // Mostrar mensaje de carga
+    mensajeCarga.style.display = 'block';
+    if (tablaTareas) {
+        tablaTareas.style.display = 'none'; // Oculta la tabla mientras carga
+    }
+    
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
+        const result = await response.json();
 
-        try {
-            const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                allTasks = result.tasks.map(task => {
-                    if (task.fechaAsignacion) {
-                        task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
-                    }
-                    return task;
-                });
-                applyFiltersAndRender();
-            } else {
-                mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
-                mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-                console.error('Error al cargar tareas:', result.message);
-            }
-        } catch (error) {
-            mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+        if (result.status === 'success') {
+            allTasks = result.tasks.map(task => {
+                if (task.fechaAsignacion) {
+                    task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
+                }
+                return task;
+            });
+            applyFiltersAndRender();
+        } else {
+            mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
             mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-            console.error('Error de red al cargar tareas:', error);
+            console.error('Error al cargar tareas:', result.message);
         }
-    };
+    } catch (error) {
+        mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+        mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+        console.error('Error de red al cargar tareas:', error);
+    }
+};
 
     // Función para obtener y popular los departamentos en el filtro
     const fetchDepartments = async () => {
@@ -537,10 +409,14 @@ const renderTasks = (tasksToRender) => {
         applyFiltersAndRender(); // Volver a aplicar filtros con valores por defecto
     });
 
-    // --- Conectar el botón global de PDF ---
-    document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
-    // --- Fin de la conexión ---
-
+    // --- Marcar tarea como completada ---
+    // Esta función ya NO es necesaria si solo usaremos handleGenerateAllForms
+    /*
+    const handleMarkAsCompleted = async (e) => {
+        // ... (código anterior)
+    };
+    */
+    
     // --- Manejo de la navegación ---
     menuIngresarTarea.addEventListener('click', (e) => {
         e.preventDefault();
@@ -557,6 +433,10 @@ const renderTasks = (tasksToRender) => {
         await fetchDepartments(); // Carga departamentos antes de tareas
         await fetchAndDisplayTasks(); // Carga y muestra las tareas
     });
+    
+    // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
+    document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
+
 
     // Inicializa la vista de "Registrar Tarea" al cargar la página
     showSection(formTareasSection);
