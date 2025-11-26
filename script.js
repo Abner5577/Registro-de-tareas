@@ -237,13 +237,22 @@ const renderTasks = (tasksToRender) => {
     });
 };*/
 //------------Versión actualizada-----------------------------------
-const renderTasks = (tasksToRender) => {
-   const tablaBody = document.querySelector('#tablaTareas tbody');
-    tablaBody.innerHTML = ''; // Limpiar la tabla
-    
+// Archivo: script.js (Reemplazar la función renderTasks alrededor de la línea 170)
 
-    if (tasks.length === 0) {
+const renderTasks = (tasksToRender) => {
+    // Apunta al tbody de la nueva tabla
+    const tablaBody = document.querySelector('#tablaTareas tbody');
+    const mensajeCarga = document.getElementById('mensaje-carga');
+    
+    // Limpiar el cuerpo de la tabla antes de agregar las nuevas filas
+    tablaBody.innerHTML = '';
+
+    if (tasksToRender.length === 0) {
+        mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
+        mensajeCarga.style.display = 'block';
+        // Mostrar fila con mensaje y colspan=5 (las 5 columnas restantes)
         tablaBody.innerHTML = '<tr><td colspan="5" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
+        document.getElementById('tablaTareas').style.display = 'table'; // Mostrar la tabla vacía
         return;
     }
 
@@ -251,14 +260,28 @@ const renderTasks = (tasksToRender) => {
     document.getElementById('tablaTareas').style.display = 'table'; 
 
     tasksToRender.forEach(task => {
-        const row = tablaBody.insertRow();
-        row.insertCell().textContent = task.tituloActividad;
-        row.insertCell().textContent = task.descripcion;
-        row.insertCell().textContent = formatDateForDisplay(task.fechaAsignacion);
-        row.insertCell().textContent = task.departamento;
-        row.insertCell().textContent = task.usuarioSoporte;
+        const fila = document.createElement('tr');
+        // El estado ya no es relevante en la vista, se puede quitar la clase 'realizada'
+        // if (task.estado === 'Realizada') {
+        //     fila.classList.add('realizada');
+        // }
+
+        // ** AQUI SOLO AGREGAMOS LAS 5 CELDAS DE DATOS **
+        fila.innerHTML = `
+            <td>${task.tituloActividad}</td>
+            <td>${task.descripcion || 'N/A'}</td>
+            <td>${formatDateForDisplay(task.fechaAsignacion)}</td>
+            <td>${task.departamento}</td>
+            <td>${task.usuarioSoporte}</td>
+        `;
+        
+        // ** ELIMINAMOS LA CREACIÓN DE LA CELDA DE ESTADO Y ACCIONES **
+
+        tablaBody.appendChild(fila);
     });
 };
+
+
 // Archivo: script.js (Añadir dentro de document.addEventListener, después de handleGenerateForm)
 
 // ** NOTA: DEBES AÑADIR LA FUNCIÓN handleGenerateAllForms() **

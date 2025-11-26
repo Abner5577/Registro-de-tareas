@@ -411,44 +411,6 @@ textarea:invalid:not(:placeholder-shown) {
 }
 
 
-.estado-Pendiente { background-color: var(--color-secundario-accion);
-font-weight: 600; }
-.estado-Realizada { background-color: #2ecc71; }
-
-.tarea-item button.marcar-realizada {
-    background-color: var(--color-primario-accion);
-    color: #000;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.85em;
-    font-family: var(--font-pixel);
-    margin-top: 15px;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    align-self: flex-start;
-    border: 2px solid #DDB800;
-    white-space: nowrap;
-}
-
-.tarea-item button.marcar-realizada:hover {
-    background-color: #057433;
-    transform: translateY(-2px);
-}
-
-/* Estilos para el estado "Realizada" */
-#tablaTareas .estado-Realizada {
-    background-color: #057433; /* Fondo verde */
-    color: #ffffff; /* Color del texto, ahora negro */
-    font-weight: 800;
-}
-/* ... (tu CSS existente) ... */
-
-.tarea-item.realizada {
-    opacity: 0.7; /* Hace que las tareas completadas se vean un poco atenuadas */
-    border-color: #2ecc71; /* Un borde verde para indicar completado */
-    background-color: #0B2A4A; /* Un color de fondo un poco diferente */
-}
 
 /* Opcional: Estilo para el mensaje cuando no hay tareas */
 .no-tasks-message {
