@@ -763,3 +763,46 @@ footer p {
     color: #000;
     font-weight: 700;
 }
+
+/* Archivo: style.css (Añadir al final) */
+
+/* Estilo para la BOLETA (contenedor oculto que se usará como plantilla) */
+.boleta-soporte-template {
+    /* Ocultar por defecto para que solo se use al generar el PDF */
+    display: none;
+    /* Estilos de Media Carta (aproximadamente 140mm x 215.9mm) */
+    width: 140mm;
+    height: 200mm; /* Deja espacio para dos boletas en A4 (297mm) */
+    padding: 10mm;
+    border: 1px solid #000;
+    margin: 5mm auto;
+    background-color: white;
+    color: black;
+    box-shadow: none;
+}
+
+/* Estilos de impresión para el contenido final del PDF */
+@media print {
+    /* Define el tamaño de la página para que quepan dos boletas (opcional, jsPDF lo maneja mejor) */
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+
+    /* Oculta los elementos de la página que no deben salir en el PDF final */
+    .main-header, .main-nav-section, .main-container, .filtros, #generarTodasLasBoletas, .task-actions-cell {
+        display: none !important;
+    }
+
+    /* Si se imprime desde el navegador, fuerza el diseño de 2 boletas por página */
+    .boleta-soporte-template {
+        display: block; /* Muestra el contenedor de la boleta */
+        /* Media carta vertical */
+        width: 100%; /* Ocupa el ancho de la impresión */
+        height: 148.5mm; /* Mitad de A4 (297mm / 2 = 148.5mm) */
+        overflow: hidden;
+        page-break-after: always;
+        margin: 0;
+        padding: 10mm;
+    }
+}

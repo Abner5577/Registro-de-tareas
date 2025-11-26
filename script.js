@@ -3,6 +3,36 @@
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
+// Archivo: script.js (Añadir antes de document.addEventListener)
+
+// Función para crear el HTML de una sola boleta (Media Carta)
+const createFormHTML = (task) => {
+    // Genera el HTML completo para una boleta
+    // Asegúrate de que los estilos aquí sean minimalistas o uses las clases CSS definidas.
+    // Usamos la clase 'boleta-soporte-template' para aplicar estilos de media carta si se necesitara una impresión directa.
+    return `
+        <div class="boleta-soporte-template">
+            <h2 style="text-align: center; color: #0B2A4A; font-family: 'Poppins', sans-serif;">Boleta de Soporte Técnico</h2>
+            <hr style="border: 1px solid #fff531f9; margin-bottom: 15px;">
+            
+            <p><strong>Fecha de Soporte:</strong> ${formatDateForDisplay(task.fechaAsignacion)}</p>
+            <p><strong>Departamento:</strong> ${task.departamento}</p>
+            <p><strong>Usuario Asignado:</strong> ${task.usuarioSoporte}</p>
+            <br>
+            <p><strong>Título de la Actividad:</strong> ${task.tituloActividad}</p>
+            <p><strong>Descripción:</strong> ${task.descripcion || 'N/A'}</p>
+            <p><strong>Estado:</strong> <span style="font-weight: bold; color: ${task.estado === 'Realizada' ? '#2ecc71' : '#e74c3c'};">${task.estado}</span></p>
+            <p><strong>Fila ID:</strong> ${task.rowIndex}</p>
+            
+            <br><br>
+            <div style="text-align: center; margin-top: 30px;">
+                <p>_________________________</p>
+                <p>Firma del Técnico</p>
+            </div>
+        </div>
+    `;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const tareaForm = document.getElementById('tareaForm');
     const menuIngresarTarea = document.getElementById('menu-ingresar-tarea');
@@ -256,23 +286,94 @@ const renderTasks = (tasksToRender) => {
             markDoneButton.addEventListener('click', handleMarkAsCompleted);
             actionCell.appendChild(markDoneButton);
         }
-        
-        // Siempre agrega el botón de "Generar Boleta"
-        const generateFormButton = document.createElement('button');
-        generateFormButton.textContent = 'Generar Boleta';
-        generateFormButton.classList.add('generar-boleta');
-        generateFormButton.dataset.rowIndex = task.rowIndex;
-        generateFormButton.addEventListener('click', handleGenerateForm);
-        actionCell.appendChild(generateFormButton);
-        
+          
         fila.appendChild(actionCell);
 
         tablaBody.appendChild(fila);
     });
 };
+// Archivo: script.js (Añadir dentro de document.addEventListener, después de handleGenerateForm)
+
+// ** NOTA: DEBES AÑADIR LA FUNCIÓN handleGenerateAllForms() **
+// Esta función debe ser añadida *después* de que se carguen las librerías de PDF
+
+const handleGenerateAllForms = async () => {
+    if (allTasks.length === 0) {
+        alert("No hay tareas para generar boletas.");
+        return;
+    }
+
+    const button = document.getElementById('generarTodasLasBoletas');
+    button.disabled = true;
+    button.textContent = 'Generando PDF (Espere)...';
+
+    try {
+        // 1. Inicializar jsPDF (Tamaño A4 en orientación vertical)
+        const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+        const tasksToGenerate = allTasks; // Puedes filtrar si solo quieres las 'Realizadas'
+
+        let firstPage = true;
+        let yPos = 5; // Posición inicial Y en mm
+        const boletaHeight = 148.5; // Altura para 2 boletas en A4 (297mm / 2)
+
+        for (let i = 0; i < tasksToGenerate.length; i++) {
+            const task = tasksToGenerate[i];
+            const boletaHTML = createFormHTML(task);
+            
+            // 2. Crear un elemento temporal en el DOM para la conversión
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = boletaHTML;
+            document.body.appendChild(tempContainer);
+            
+            // 3. Usar html2canvas
+            const canvas = await window.html2canvas(tempContainer.querySelector('.boleta-soporte-template'), {
+                scale: 2 // Mayor escala para mejor calidad
+            });
+
+            // 4. Determinar la posición de la boleta en la página A4
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const imgWidth = 190; // Ancho máximo A4 (210mm - márgenes)
+            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Altura escalada
+
+            if (i % 2 === 0) {
+                // Boleta impar (primera en la página, o si ya se llenó la página)
+                if (!firstPage) {
+                    pdf.addPage();
+                }
+                yPos = 5; // Posición superior
+            } else {
+                // Boleta par (segunda en la página)
+                yPos = boletaHeight + 5; // Posición inferior (mitad de la página + margen)
+            }
+            
+            // 5. Añadir la imagen al PDF
+            pdf.addImage(imgData, 'JPEG', 10, yPos, imgWidth, imgHeight); // 10mm de margen X
+
+            // 6. Limpiar el elemento temporal
+            document.body.removeChild(tempContainer);
+            firstPage = false;
+        }
+
+        // 7. Guardar el PDF final
+        pdf.save("Boletas_Soporte_Consolidadas.pdf");
+        alert('PDF de boletas consolidadas generado con éxito! 🎉');
+
+    } catch (error) {
+        console.error('Error al generar PDF consolidado:', error);
+        alert('Hubo un error crítico al generar el PDF. Revise la consola.');
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Generar Todas las Boletas en PDF';
+    }
+};
+
+    // ** Conectar el botón al Event Listener (Dentro de document.addEventListener) **
+    // Añade esta línea cerca de donde se definen otros listeners
+    document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
+
 
     // --- Generar Boleta de Soporte ---
-const handleGenerateForm = async (e) => {
+/*const handleGenerateForm = async (e) => {
     const button = e.target;
     const rowIndex = button.dataset.rowIndex;
 

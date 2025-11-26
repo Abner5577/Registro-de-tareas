@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Tareas</title>
     <!--Fuentes agregadas en sitio-->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!--Conexión con el estilo-->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <header class="main-header">
         <div class="header-content">
@@ -19,7 +24,7 @@
             <p>Control de soporte Tecnico en COVIAL.</p>
         </div>
     </header>
-    
+
     <nav class="main-nav-section">
         <ul>
             <li>
@@ -52,10 +57,10 @@
                             <span class="error-message" id="errorTituloActividad"></span>
                         </div>
                     </div>
-                    
+
                     <label for="descripcion">Descripción:</label>
                     <textarea id="descripcion" rows="3" placeholder="Detalles específicos de la tarea..."></textarea>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="departamento">Departamento:</label>
@@ -84,6 +89,7 @@
                                 <option value="Caja Fiscal">Caja Fiscal</option>
                                 <option value="Almacén">Almacén</option>
                                 <option value="Auditoría">Auditoría</option>
+                                <option value="Compras">Compras</option>
                             </select>
                             <span class="error-message" id="errorDepartamento"></span>
                         </div>
@@ -99,63 +105,73 @@
             </section>
 
             <section id="lista-tareas" class="page-section">
-    <h2>Listado y Gestión de Tareas</h2>
-    <div class="filtros">
-        <label for="filtroEstado">Estado:</label>
-        <select id="filtroEstado">
-            <option value="Todas">Todas</option>
-            <option value="Pendiente">Pendientes</option>
-            <option value="Realizada">Realizadas</option>
-        </select>
-        <label for="filtroDepartamento">Departamento:</label>
-        <select id="filtroDepartamento">
-            <option value="Todos">Todos</option>
-            <option value="Financiero">Financiero</option>
-            <option value="Informatica">Informática</option>
-            <option value="Tecnico">Técnico</option>
-            <option value="Infraestructura">Infraestructura y Tec.</option>
-            <option value="Inventarios">Inventarios</option>
-            <option value="VISA">VISA</option>
-            <option value="Recepcion">Recepción</option>
-            <option value="Transportes">Transportes</option>
-            <option value="Direccion">Dirección</option>
-            <option value="Juridico">Jurídico</option>
-            <option value="Archivo">Archivo</option>
-            <option value="RRHH">RRHH</option>
-        </select>
-        <label for="filtroFecha">Fecha:</label>
-        <input type="date" id="filtroFecha">
-        <button id="limpiarFiltros">Restablecer Filtros</button>
-    </div>
-    
-    <div class="tabla-contenedor">
-        <table id="tablaTareas">
-            <thead>
-                <tr>
-                    <th class="titulotabla">Título</th>
-                    <th>Descripción</th>
-                    <th>Fecha</th>
-                    <th>Depart.</th>
-                    <th>Usuario</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-        <p id="mensaje-carga">Cargando tareas...</p>
-    </div>
-</section>
+
+                <h2>Listado y Gestión de Tareas</h2>
+                <div class="filtros">
+                    <label for="filtroEstado">Estado:</label>
+                    <select id="filtroEstado">
+                        <option value="Todas">Todas</option>
+                        <option value="Pendiente">Pendientes</option>
+                        <option value="Realizada">Realizadas</option>
+                    </select>
+                    <label for="filtroDepartamento">Departamento:</label>
+                    <select id="filtroDepartamento">
+                        <option value="Todos">Todos</option>
+                        <option value="Financiero">Financiero</option>
+                        <option value="Informatica">Informática</option>
+                        <option value="Tecnico">Técnico</option>
+                        <option value="Infraestructura">Infraestructura y Tec.</option>
+                        <option value="Inventarios">Inventarios</option>
+                        <option value="VISA">VISA</option>
+                        <option value="Recepcion">Recepción</option>
+                        <option value="Transportes">Transportes</option>
+                        <option value="Direccion">Dirección</option>
+                        <option value="Juridico">Jurídico</option>
+                        <option value="Archivo">Archivo</option>
+                        <option value="RRHH">RRHH</option>
+                    </select>
+                    <label for="filtroFecha">Fecha:</label>
+                    <input type="date" id="filtroFecha">
+                    <button id="limpiarFiltros">Restablecer Filtros</button>
+                </div>
+
+                <button id="generarTodasLasBoletas" class="generar-boleta"
+                    style="margin-top: 20px; padding: 10px 20px; font-size: 1.1em; width: fit-content;">
+                    Generar Todas las Boletas en PDF
+                </button>
+
+                <div class="tabla-contenedor">
+                    <table id="tablaTareas">
+                        <thead>
+                            <tr>
+                                <th class="titulotabla">Título</th>
+                                <th>Descripción</th>
+                                <th>Fecha</th>
+                                <th>Depart.</th>
+                                <th>Usuario</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <p id="mensaje-carga">Cargando tareas...</p>
+                </div>
+            </section>
 
 
 
         </main>
-    </div> 
+    </div>
     <footer>
         <p>&copy; 2025 Gestor de Tareas. Desarrollado con IA y Abner Sagastumee</p>
     </footer>
 
-    <script src="script.js" defer></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="script.js" defer></script>
 </body>
+
 </html>
