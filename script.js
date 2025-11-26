@@ -4,8 +4,11 @@
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
 
 // ------------------------------------------------------------------
-// FUNCIONES DE FECHA (MOVIDAS FUERA DEL DOMContentLoaded para ACCESO GLOBAL)
+// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES
 // ------------------------------------------------------------------
+
+// Declaración global de allTasks para que sea accesible por handleGenerateAllForms
+let allTasks = []; 
 
 // Función para obtener y mostrar la fecha formateada (Acceso Global)
 const formatDateForDisplay = (dateValue) => {
@@ -41,11 +44,7 @@ const getFormattedDateForComparison = (dateValue) => {
     return `${year}-${month}-${day}`;
 };
 
-// ------------------------------------------------------------------
-// LÓGICA DEL PDF CONSOLIDADO (AÑADIDA)
-// ------------------------------------------------------------------
-
-// Plantilla HTML de una boleta (usa la función formatDateForDisplay ahora accesible)
+// Plantilla HTML de una boleta
 const createFormHTML = (task) => {
     return `
         <div class="boleta-soporte-template">
@@ -72,11 +71,12 @@ const createFormHTML = (task) => {
 
 // Función para generar todas las boletas en un solo PDF (2 por página)
 const handleGenerateAllForms = async () => {
-    // Filtra las tareas: SOLO aquellas con estado 'Realizada'
+    // allTasks es accesible globalmente
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
-        alert("No hay tareas realizadas para generar boletas.");
+        // Muestra el mensaje de error que ya vimos si no hay tareas realizadas
+        alert("No hay tareas realizadas para generar boletas."); 
         return;
     }
 
@@ -85,7 +85,7 @@ const handleGenerateAllForms = async () => {
     button.textContent = 'Generando PDF (Espere)...';
 
     try {
-        // Inicializar jsPDF (Tamaño A4 en orientación vertical)
+        // Inicializar jsPDF (Necesita que las librerías estén en el HTML)
         const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
         let firstPage = true;
         const boletaHeight_mm = 148.5; // La mitad de un A4 (297mm / 2)
@@ -138,15 +138,17 @@ const handleGenerateAllForms = async () => {
 
     } catch (error) {
         console.error('Error al generar PDF consolidado:', error);
-        alert('Hubo un error crítico al generar el PDF. Revise la consola.');
+        // Muestra el error crítico que vimos si hay un problema con html2canvas/jspdf
+        alert('Hubo un error crítico al generar el PDF. Revise la consola.'); 
     } finally {
         button.disabled = false;
         button.textContent = 'Generar Todas las Boletas en PDF';
     }
 };
 
+
 // ------------------------------------------------------------------
-// INICIO DEL DOMContentLoaded
+// INICIO DEL DOMContentLoaded (Aquí se re-declaran las variables locales)
 // ------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -155,14 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuVerTareas = document.getElementById('menu-ver-tareas');
     const formTareasSection = document.getElementById('form-tareas');
     const listaTareasSection = document.getElementById('lista-tareas');
-    const contenedorTareas = document.getElementById('contenedorTareas');
     const filtroEstado = document.getElementById('filtroEstado');
     const filtroDepartamento = document.getElementById('filtroDepartamento');
     const filtroFecha = document.getElementById('filtroFecha');
     const limpiarFiltrosBtn = document.getElementById('limpiarFiltros');
 
-    let allTasks = []; // Para almacenar todas las tareas cargadas desde Sheets
-    let uniqueDepartments = []; // Para almacenar los departamentos únicos para el filtro
+    // Variable local que se usaba anteriormente, ahora solo se usa la global `allTasks`
+    // let allTasks = []; 
+    let uniqueDepartments = []; // Variable local (no se usa globalmente)
 
     // Función para manejar la visibilidad de las secciones
     const showSection = (sectionToShow) => {
@@ -257,20 +259,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funciones para "Ver Tareas" ---
     
-    // Función para renderizar las tareas (ACTUALIZADA: Elimina las columnas Estado y Acciones para usar solo 5)
+    // Función para renderizar las tareas 
     const renderTasks = (tasksToRender) => {
-        // Apunta al tbody de la tabla
         const tablaBody = document.querySelector('#tablaTareas tbody');
         const mensajeCarga = document.getElementById('mensaje-carga');
         
-        // Limpiar el cuerpo de la tabla antes de agregar las nuevas filas
         tablaBody.innerHTML = '';
 
         if (tasksToRender.length === 0) {
             mensajeCarga.textContent = 'No hay tareas que coincidan con los filtros aplicados.';
             mensajeCarga.style.display = 'block';
-            // Colspan="5" para las 5 columnas restantes
-            tablaBody.innerHTML = '<tr><td colspan="5" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
+            // Colspan="7" para las 7 columnas actuales
+            tablaBody.innerHTML = '<tr><td colspan="7" class="sin-registros">No se encontraron tareas con los filtros aplicados.</td></tr>';
             document.getElementById('tablaTareas').style.display = 'table'; 
             return;
         }
@@ -284,22 +284,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 fila.classList.add('realizada');
             }
 
-            // ** SOLO SE INSERTAN LAS 5 CELDAS DE DATOS **
             fila.innerHTML = `
                 <td>${task.tituloActividad}</td>
                 <td>${task.descripcion || 'N/A'}</td>
                 <td>${formatDateForDisplay(task.fechaAsignacion)}</td>
                 <td>${task.departamento}</td>
                 <td>${task.usuarioSoporte}</td>
+                <td class="estado-${task.estado}">
+                    <span class="estado-tarea">${task.estado}</span>
+                </td>
             `;
             
+            // Crea una celda para los botones de acción
+            const actionCell = document.createElement('td');
+            actionCell.classList.add('task-actions-cell');
+            
+            // Crea los botones y los añade a la celda
+            // Si la tarea está Pendiente, agrega el botón de "Marcar Realizada"
+            if (task.estado === 'Pendiente') {
+                const markDoneButton = document.createElement('button');
+                markDoneButton.textContent = 'Marcar Realizada';
+                markDoneButton.classList.add('marcar-realizada');
+                markDoneButton.dataset.rowIndex = task.rowIndex;
+                markDoneButton.addEventListener('click', handleMarkAsCompleted);
+                actionCell.appendChild(markDoneButton);
+            }
+            
+            // Siempre agrega el botón de "Generar Boleta"
+            // Nota: Este botón usará la función handleGenerateForm que no está en este código,
+            // pero lo dejamos por si quieres seguir usando la funcionalidad de Apps Script (generateForm)
+            const generateFormButton = document.createElement('button');
+            generateFormButton.textContent = 'Generar Boleta';
+            generateFormButton.classList.add('generar-boleta');
+            generateFormButton.dataset.rowIndex = task.rowIndex;
+            //generateFormButton.addEventListener('click', handleGenerateForm); // Descomentar si usas la función de boleta individual
+            actionCell.appendChild(generateFormButton);
+            
+            fila.appendChild(actionCell);
             tablaBody.appendChild(fila);
         });
     };
 
-
-    // --- Generar Boleta de Soporte (Simple) ---
-    // Esta función ya NO es necesaria si solo usaremos handleGenerateAllForms
+    // --- Generar Boleta de Soporte (Función anterior) ---
+    // La boleta individual ya no se está usando, pero puedes descomentar esto si la necesitas
     /*
     const handleGenerateForm = async (e) => {
         // ... (código anterior)
@@ -309,39 +336,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para obtener y mostrar las tareas
     const fetchAndDisplayTasks = async () => {
-    // Apunta al nuevo elemento de mensaje de carga
-    const mensajeCarga = document.getElementById('mensaje-carga');
-    const tablaTareas = document.getElementById('tablaTareas');
+        const mensajeCarga = document.getElementById('mensaje-carga');
+        const tablaTareas = document.getElementById('tablaTareas');
 
-    mensajeCarga.textContent = 'Cargando tareas...'; // Mostrar mensaje de carga
-    mensajeCarga.style.display = 'block';
-    if (tablaTareas) {
-        tablaTareas.style.display = 'none'; // Oculta la tabla mientras carga
-    }
-    
-    try {
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            allTasks = result.tasks.map(task => {
-                if (task.fechaAsignacion) {
-                    task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
-                }
-                return task;
-            });
-            applyFiltersAndRender();
-        } else {
-            mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
-            mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-            console.error('Error al cargar tareas:', result.message);
+        mensajeCarga.textContent = 'Cargando tareas...';
+        mensajeCarga.style.display = 'block';
+        if (tablaTareas) {
+            tablaTareas.style.display = 'none';
         }
-    } catch (error) {
-        mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
-        mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-        console.error('Error de red al cargar tareas:', error);
-    }
-};
+        
+        try {
+            const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                // Asigna las tareas a la variable GLOBAL allTasks
+                allTasks = result.tasks.map(task => { 
+                    if (task.fechaAsignacion) {
+                        task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
+                    }
+                    return task;
+                });
+                applyFiltersAndRender();
+            } else {
+                mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
+                mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+                console.error('Error al cargar tareas:', result.message);
+            }
+        } catch (error) {
+            mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+            mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+            console.error('Error de red al cargar tareas:', error);
+        }
+    };
 
     // Función para obtener y popular los departamentos en el filtro
     const fetchDepartments = async () => {
@@ -373,7 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Manejo de filtros ---
     const applyFiltersAndRender = () => {
-        let filteredTasks = [...allTasks]; // Copia de las tareas para filtrar
+        // Usa la variable GLOBAL allTasks
+        let filteredTasks = [...allTasks]; 
 
         // Filtrar por estado
         const estadoSeleccionado = filtroEstado.value;
@@ -388,10 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Filtrar por fecha
-        const fechaSeleccionada = filtroFecha.value; // Ya viene en YYYY-MM-DD
+        const fechaSeleccionada = filtroFecha.value; 
         if (fechaSeleccionada) {
             filteredTasks = filteredTasks.filter(task => {
-                // Comparamos el formato YYYY-MM-DD de la tarea con la fecha seleccionada
                 return task.fechaAsignacion === fechaSeleccionada;
             });
         }
@@ -406,17 +433,51 @@ document.addEventListener('DOMContentLoaded', () => {
         filtroEstado.value = 'Todas';
         filtroDepartamento.value = 'Todos';
         filtroFecha.value = '';
-        applyFiltersAndRender(); // Volver a aplicar filtros con valores por defecto
+        applyFiltersAndRender(); 
     });
 
     // --- Marcar tarea como completada ---
-    // Esta función ya NO es necesaria si solo usaremos handleGenerateAllForms
-    /*
     const handleMarkAsCompleted = async (e) => {
-        // ... (código anterior)
+        const button = e.target;
+        const rowIndex = button.dataset.rowIndex; 
+
+        if (confirm('¿Estás seguro de que quieres marcar esta tarea como "Realizada"?')) {
+            button.disabled = true;
+            button.textContent = 'Actualizando...';
+
+            const formData = new FormData();
+            formData.append('action', 'updateTaskStatus'); 
+            formData.append('rowIndex', rowIndex);
+            formData.append('newStatus', 'Realizada');
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    alert('Tarea marcada como "Realizada" con éxito! ✅');
+                    await fetchAndDisplayTasks();
+                } else {
+                    alert('Error al marcar tarea como realizada: ❌ ' + result.message);
+                    button.disabled = false;
+                    button.textContent = 'Marcar Realizada';
+                }
+            } catch (error) {
+                console.error('Error de red al actualizar tarea:', error);
+                alert('Hubo un problema de conexión al actualizar la tarea 😣. Inténtalo de nuevo. ');
+                button.disabled = false;
+                button.textContent = 'Marcar Realizada';
+            }
+        }
     };
-    */
     
+    // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
+    // Conecta el botón a la función handleGenerateAllForms
+    document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
+
     // --- Manejo de la navegación ---
     menuIngresarTarea.addEventListener('click', (e) => {
         e.preventDefault();
@@ -430,13 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(listaTareasSection);
         menuVerTareas.classList.add('active');
         menuIngresarTarea.classList.remove('active');
-        await fetchDepartments(); // Carga departamentos antes de tareas
-        await fetchAndDisplayTasks(); // Carga y muestra las tareas
+        await fetchDepartments(); 
+        await fetchAndDisplayTasks(); 
     });
-    
-    // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
-    document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
-
 
     // Inicializa la vista de "Registrar Tarea" al cargar la página
     showSection(formTareasSection);
