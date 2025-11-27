@@ -1,8 +1,15 @@
-// script.js (VERSIÓN 3)
+// script.js (VERSIÓN FINAL Y LIMPIA)
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxRX6upyayl1Rj9C2aNhaWPq8sxEd0q5ruO-bPvaFxe8eAbvU-eRRPAvfBZ3oQYT7zNKA/exec'; 
 
+// ------------------------------------------------------------------
+// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES 
+// ------------------------------------------------------------------
+
+// *** VARIABLES GLOBALES NECESARIAS ***
+let allTasks = []; 
+let uniqueDepartments = []; 
 
 const formatDateForDisplay = (dateValue) => {
     if (!dateValue) return '';
@@ -25,40 +32,15 @@ const getFormattedDateForComparison = (dateValue) => {
     if (isNaN(date)) return dateValue; 
     
     // Usar la fecha local sin forzar UTC para evitar desplazamiento de un día
-    // Esto es vital para que la comparación del filtro de fecha funcione correctamente.
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 
-const createFormHTML = (task) => {
-    // Aseguramos que el contenedor tenga un fondo blanco para html2canvas
-    return `
-        <div class="boleta-soporte-template" style="background-color: white;">
-            <h2 style="text-align: center; color: #0B2A4A; font-family: 'Poppins', sans-serif;">Boleta de Soporte Técnico</h2>
-            <hr style="border: 1px solid #fff531f9; margin-bottom: 15px;">
-            
-            <p><strong>Fila ID:</strong> ${task.rowIndex}</p>
-            <p><strong>Fecha de Soporte:</strong> ${formatDateForDisplay(task.fechaAsignacion)}</p>
-            <p><strong>Departamento:</strong> ${task.departamento}</p>
-            <p><strong>Usuario Asignado:</strong> ${task.usuarioSoporte}</p>
-            <br>
-            <p><strong>Título de la Actividad:</strong> ${task.tituloActividad}</p>
-            <p><strong>Descripción:</strong> ${task.descripcion || 'N/A'}</p>
-            <p><strong>Estado:</strong> <span style="font-weight: bold; color: ${task.estado === 'Realizada' ? '#2ecc71' : '#e74c3c'};">${task.estado}</span></p>
-            
-            <br><br><br>
-            <div style="text-align: center; margin-top: 30px;">
-                <p>_________________________</p>
-                <p>Firma del Técnico</p>
-            </div>
-        </div>
-    `;
-};
-
+// ** FUNCIÓN PRINCIPAL DE GENERACIÓN DE PDF (LLAMADA AL SERVIDOR) **
 const handleGenerateAllForms = async () => {
-    // allTasks sigue siendo accesible globalmente
+    // allTasks ya es global, por lo que es accesible aquí
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
@@ -71,14 +53,12 @@ const handleGenerateAllForms = async () => {
     button.textContent = 'Solicitando PDF al Servidor (Espere)...';
 
     try {
-        // Nueva llamada al Apps Script con la acción 'generateAllForms'
         const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateAllForms`);
         const result = await response.json();
 
         if (result.status === 'success') {
             alert(`✅ PDF Consolidado creado con éxito y guardado en Drive.\nNombre del archivo: ${result.fileName}`);
             
-            // Abrir el PDF generado por el servidor en una nueva pestaña
             if (result.fileUrl) {
                  window.open(result.fileUrl, '_blank');
             }
@@ -97,7 +77,7 @@ const handleGenerateAllForms = async () => {
 
 
 // ------------------------------------------------------------------
-// INICIO DEL DOMContentLoaded (Mantenemos la lógica principal de la UI)
+// INICIO DEL DOMContentLoaded (Lógica principal de la UI)
 // ------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -245,7 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const markDoneButton = document.createElement('button');
                 markDoneButton.textContent = 'Marcar Realizada';
                 markDoneButton.classList.add('marcar-realizada');
-                markDoneButton.dataset.rowIndex = task.rowIndex;
+                // *** USO DE task.rowIndex ***
+                markDoneButton.dataset.rowIndex = task.rowIndex; 
                 markDoneButton.addEventListener('click', handleMarkAsCompleted);
                 actionCell.appendChild(markDoneButton);
             }
@@ -254,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const generateFormButton = document.createElement('button');
             generateFormButton.textContent = 'Generar Boleta';
             generateFormButton.classList.add('generar-boleta');
-            generateFormButton.dataset.rowIndex = task.rowIndex;
+            // *** USO DE task.rowIndex ***
+            generateFormButton.dataset.rowIndex = task.rowIndex; 
             generateFormButton.addEventListener('click', handleGenerateForm);
             actionCell.appendChild(generateFormButton);
             
@@ -293,46 +275,49 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
-// script.js (Parte relevante de fetchAndDisplayTasks)
+    // Función para obtener y mostrar las tareas
+    const fetchAndDisplayTasks = async () => {
+        const mensajeCarga = document.getElementById('mensaje-carga');
+        const tablaTareas = document.getElementById('tablaTareas');
 
-// Función para obtener y mostrar las tareas
-const fetchAndDisplayTasks = async () => {
-    // ... (código de mensaje de carga y try/catch) ...
-    
-    try {
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
-        const result = await response.json();
+        mensajeCarga.textContent = 'Cargando tareas...';
+        mensajeCarga.style.display = 'block';
+        if (tablaTareas) {
+            tablaTareas.style.display = 'none';
+        }
+        
+        try {
+            const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
+            const result = await response.json();
 
-       if (result.status === 'success') {
-            allTasks = result.tasks.map(task => { 
-                if (task.fechaAsignacion) {
-                    task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
-                }
-                
-                // *** CORRECCIÓN CLAVE PARA rowIndex ***
-                // Asume que el primer elemento del objeto es el rowIndex (si tu Apps Script lo devuelve así)
-                // O, más seguro, verifica si ya existe y si no, busca una propiedad con ese valor.
-                // Como no vemos tu Apps Script, asumiremos que la primera propiedad devuelta es el rowIndex si no existe.
-                // Si la propiedad rowIndex no existe, la asignamos de forma temporal (esto es SOLO si tu Apps Script no lo hace)
-                if (!task.rowIndex) {
-                    // *** ESTA LÍNEA ES UN PARCHE. DEBES ASEGURARTE QUE Apps Script LO DEVUELVA. ***
-                    // Asignaremos un valor temporal para que no falle la tabla, pero la actualización
-                    // de estado podría fallar si Apps Script no lo devuelve realmente.
-                    task.rowIndex = task.rowIndex || 'TEMP_ID_' + Math.random(); 
-                }
-                
-                // Corrección para el estado
-                task.estado = task.estado || 'Pendiente'; 
-                
-                return task;
-            });
-            applyFiltersAndRender();
-        } 
-        // ... (resto del manejo de errores) ...
-    } catch (error) {
-        // ... (manejo de errores de red) ...
-    }
-};
+            if (result.status === 'success') {
+                allTasks = result.tasks.map((task, index) => { 
+                    if (task.fechaAsignacion) {
+                        task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
+                    }
+                    
+                    // *** CORRECCIÓN CLAVE PARA EL TypeError: task.rowIndex is undefined ***
+                    // Si Apps Script no envía rowIndex, asignamos un valor de parche temporal.
+                    // (La solución definitiva es arreglar Apps Script, pero esto evita que la UI falle)
+                    task.rowIndex = task.rowIndex || 'PATCH-' + (index + 2); 
+                    
+                    // Corrección para el estado (resuelve el error anterior)
+                    task.estado = task.estado || 'Pendiente'; 
+                    
+                    return task;
+                });
+                applyFiltersAndRender();
+            } else {
+                mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
+                mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+                console.error('Error al cargar tareas:', result.message);
+            }
+        } catch (error) {
+            mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+            mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+            console.error('Error de red al cargar tareas:', error);
+        }
+    };
 
 
     // Función para obtener y popular los departamentos en el filtro
@@ -408,6 +393,7 @@ const fetchAndDisplayTasks = async () => {
 
             const formData = new FormData();
             formData.append('action', 'updateTaskStatus'); 
+            // rowIndex ya está garantizado por el parche en fetchAndDisplayTasks
             formData.append('rowIndex', rowIndex);
             formData.append('newStatus', 'Realizada');
 
@@ -436,7 +422,6 @@ const fetchAndDisplayTasks = async () => {
     };
     
     // --- CONEXIÓN DE BOTÓN GLOBAL DE PDF ---
-    // Conecta el botón a la función handleGenerateAllForms (que es global)
     document.getElementById('generarTodasLasBoletas')?.addEventListener('click', handleGenerateAllForms);
 
     // --- Manejo de la navegación ---
