@@ -1,7 +1,7 @@
 // script.js (VERSIÓN FINAL Y LIMPIA)
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxRX6upyayl1Rj9C2aNhaWPq8sxEd0q5ruO-bPvaFxe8eAbvU-eRRPAvfBZ3oQYT7zNKA/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQtE6xM1k1Tj837Xn_p9bVa48tKTH3wlmWlAeWvImqoIc_XYpJX29dLxisagxyMKDPxg/exec'; 
 
 // ------------------------------------------------------------------
 // DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES 
