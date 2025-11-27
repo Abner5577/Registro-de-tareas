@@ -303,15 +303,25 @@ const fetchAndDisplayTasks = async () => {
         const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
         const result = await response.json();
 
-        if (result.status === 'success') {
+       if (result.status === 'success') {
             allTasks = result.tasks.map(task => { 
                 if (task.fechaAsignacion) {
                     task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
                 }
                 
-                // *** CORRECCIÓN CLAVE ***
-                // Asigna 'Pendiente' si el servidor no define 'task.estado'.
-                // Esto previene el Uncaught TypeError.
+                // *** CORRECCIÓN CLAVE PARA rowIndex ***
+                // Asume que el primer elemento del objeto es el rowIndex (si tu Apps Script lo devuelve así)
+                // O, más seguro, verifica si ya existe y si no, busca una propiedad con ese valor.
+                // Como no vemos tu Apps Script, asumiremos que la primera propiedad devuelta es el rowIndex si no existe.
+                // Si la propiedad rowIndex no existe, la asignamos de forma temporal (esto es SOLO si tu Apps Script no lo hace)
+                if (!task.rowIndex) {
+                    // *** ESTA LÍNEA ES UN PARCHE. DEBES ASEGURARTE QUE Apps Script LO DEVUELVA. ***
+                    // Asignaremos un valor temporal para que no falle la tabla, pero la actualización
+                    // de estado podría fallar si Apps Script no lo devuelve realmente.
+                    task.rowIndex = task.rowIndex || 'TEMP_ID_' + Math.random(); 
+                }
+                
+                // Corrección para el estado
                 task.estado = task.estado || 'Pendiente'; 
                 
                 return task;
