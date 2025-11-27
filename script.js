@@ -293,45 +293,34 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+// script.js (Parte relevante de fetchAndDisplayTasks)
+
 // Función para obtener y mostrar las tareas
 const fetchAndDisplayTasks = async () => {
-    const mensajeCarga = document.getElementById('mensaje-carga');
-    const tablaTareas = document.getElementById('tablaTareas');
-
-    mensajeCarga.textContent = 'Cargando tareas...';
-    mensajeCarga.style.display = 'block';
-    if (tablaTareas) {
-        tablaTareas.style.display = 'none';
-    }
+    // ... (código de mensaje de carga y try/catch) ...
     
     try {
         const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
         const result = await response.json();
 
         if (result.status === 'success') {
-            // Asigna las tareas a la variable GLOBAL allTasks
             allTasks = result.tasks.map(task => { 
                 if (task.fechaAsignacion) {
-                    // Nota: getFormattedDateForComparison también es global y accesible
                     task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
                 }
                 
-                // *** CORRECCIÓN CLAVE PARA EL TypeError ***
-                // Si la propiedad 'estado' no existe o es null/undefined, le asignamos 'Pendiente'.
+                // *** CORRECCIÓN CLAVE ***
+                // Asigna 'Pendiente' si el servidor no define 'task.estado'.
+                // Esto previene el Uncaught TypeError.
                 task.estado = task.estado || 'Pendiente'; 
                 
                 return task;
             });
             applyFiltersAndRender();
-        } else {
-            mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
-            mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-            console.error('Error al cargar tareas:', result.message);
-        }
+        } 
+        // ... (resto del manejo de errores) ...
     } catch (error) {
-        mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
-        mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-        console.error('Error de red al cargar tareas:', error);
+        // ... (manejo de errores de red) ...
     }
 };
 
