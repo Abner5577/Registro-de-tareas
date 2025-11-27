@@ -293,45 +293,48 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
-    // Función para obtener y mostrar las tareas
-    const fetchAndDisplayTasks = async () => {
-        const mensajeCarga = document.getElementById('mensaje-carga');
-        const tablaTareas = document.getElementById('tablaTareas');
+// Función para obtener y mostrar las tareas
+const fetchAndDisplayTasks = async () => {
+    const mensajeCarga = document.getElementById('mensaje-carga');
+    const tablaTareas = document.getElementById('tablaTareas');
 
-        mensajeCarga.textContent = 'Cargando tareas...';
-        mensajeCarga.style.display = 'block';
-        if (tablaTareas) {
-            tablaTareas.style.display = 'none';
-        }
-        
-        try {
-            const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
-            const result = await response.json();
+    mensajeCarga.textContent = 'Cargando tareas...';
+    mensajeCarga.style.display = 'block';
+    if (tablaTareas) {
+        tablaTareas.style.display = 'none';
+    }
+    
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getTasks`);
+        const result = await response.json();
 
-            if (result.status === 'success') {
-                allTasks = result.tasks.map(task => { 
-                    if (task.fechaAsignacion) {
-                        task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
-                    }
-                    // IMPORTANTE: Si Apps Script no devuelve un estado, se lo asignamos.
-                    // Esto ayuda a solucionar el problema de la columna "undefined"
-                    if (!task.estado) {
-                         task.estado = 'Pendiente'; 
-                    }
-                    return task;
-                });
-                applyFiltersAndRender();
-            } else {
-                mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
-                mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-                console.error('Error al cargar tareas:', result.message);
-            }
-        } catch (error) {
-            mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+        if (result.status === 'success') {
+            // Asigna las tareas a la variable GLOBAL allTasks
+            allTasks = result.tasks.map(task => { 
+                if (task.fechaAsignacion) {
+                    // Nota: getFormattedDateForComparison también es global y accesible
+                    task.fechaAsignacion = getFormattedDateForComparison(task.fechaAsignacion);
+                }
+                
+                // *** CORRECCIÓN CLAVE PARA EL TypeError ***
+                // Si la propiedad 'estado' no existe o es null/undefined, le asignamos 'Pendiente'.
+                task.estado = task.estado || 'Pendiente'; 
+                
+                return task;
+            });
+            applyFiltersAndRender();
+        } else {
+            mensajeCarga.textContent = `Error al cargar tareas: ${result.message}`;
             mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
-            console.error('Error de red al cargar tareas:', error);
+            console.error('Error al cargar tareas:', result.message);
         }
-    };
+    } catch (error) {
+        mensajeCarga.textContent = 'Hubo un problema de conexión al cargar las tareas.';
+        mensajeCarga.style.color = getComputedStyle(document.documentElement).getPropertyValue('--color-secundario-accion');
+        console.error('Error de red al cargar tareas:', error);
+    }
+};
+
 
     // Función para obtener y popular los departamentos en el filtro
     const fetchDepartments = async () => {
