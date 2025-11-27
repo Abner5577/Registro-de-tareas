@@ -1,14 +1,8 @@
 // script.js (VERSIÓN 3)
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMFGJONENVHfHu_cYOZ_3fJucc12QC7BNcAyM0Lo43e4gfht-1dJnyx12HFPz9yiHgWA/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzCeNkaY3G-eX5peRRNreY0n8JqvQXh884_XjVqsYSQNu3ogYgjVzEytCZh4XSOYbVWA/exec'; 
 
-// ------------------------------------------------------------------
-// DECLARACIÓN GLOBAL DE VARIABLES Y FUNCIONES AUXILIARES 
-// ------------------------------------------------------------------
-
-let allTasks = []; 
-let uniqueDepartments = []; // La moveremos al ámbito global también por consistencia.
 
 const formatDateForDisplay = (dateValue) => {
     if (!dateValue) return '';
@@ -63,96 +57,38 @@ const createFormHTML = (task) => {
     `;
 };
 
-// ** FUNCIÓN PRINCIPAL DE GENERACIÓN DE PDF (SOLUCIÓN DEL ERROR jsPDF.scale) **
 const handleGenerateAllForms = async () => {
-    // Filtrar tareas que tengan el estado correcto.
+    // allTasks sigue siendo accesible globalmente
     const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
-        alert("No hay tareas realizadas para generar boletas. 📋"); 
+        alert("No hay tareas realizadas (Realizada) para generar el PDF consolidado. 📋"); 
         return;
     }
 
     const button = document.getElementById('generarTodasLasBoletas');
     button.disabled = true;
-    button.textContent = 'Generando PDF (Espere)...';
+    button.textContent = 'Solicitando PDF al Servidor (Espere)...';
 
     try {
-        const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
-        let firstPage = true;
-        const A4_HEIGHT_MM = 297;
-        const BOLETA_HEIGHT_MM = 148.5; // La mitad de un A4
-        const IMG_WIDTH_MM = 190; // Ancho para caber en A4 con 10mm de margen (210-20)
+        // Nueva llamada al Apps Script con la acción 'generateAllForms'
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateAllForms`);
+        const result = await response.json();
 
-        for (let i = 0; i < tasksToGenerate.length; i++) {
-            const task = tasksToGenerate[i];
-            const boletaHTML = createFormHTML(task);
+        if (result.status === 'success') {
+            alert(`✅ PDF Consolidado creado con éxito y guardado en Drive.\nNombre del archivo: ${result.fileName}`);
             
-            // 1. Crear elemento temporal en el DOM
-            const tempContainer = document.createElement('div');
-            // Es CRÍTICO darle dimensiones para que html2canvas pueda renderizar correctamente
-            // Lo hacemos visible pero fuera de la vista
-            tempContainer.style.position = 'absolute';
-            tempContainer.style.left = '0';
-            tempContainer.style.top = '0';
-            tempContainer.style.width = '210mm'; // Ancho de página A4
-            tempContainer.style.height = '300mm'; // Alto de página A4 (o más)
-            tempContainer.style.zIndex = '-1000'; // Asegurar que no moleste a la UI
-            tempContainer.innerHTML = boletaHTML;
-            document.body.appendChild(tempContainer);
-
-            const elementToCapture = tempContainer.querySelector('.boleta-soporte-template');
-            
-            // 2. Capturar con html2canvas
-            const canvas = await window.html2canvas(elementToCapture, {
-                scale: 3, 
-                useCORS: true,
-                logging: false,
-                // backgroundColor: 'white' // Ya lo definimos en el HTML, pero no está de más
-            });
-
-            // 3. Obtener datos y dimensiones (¡Punto crítico de validación!)
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            
-            // Calculamos la altura manteniendo la relación de aspecto
-            let imgHeight = (canvas.height * IMG_WIDTH_MM) / canvas.width;
-
-            // ** VALIDACIÓN CLAVE **
-            if (isNaN(imgHeight) || imgHeight <= 0) {
-                console.error(`Error: Dimensiones de canvas inválidas para la tarea #${i+1}. width: ${canvas.width}, height: ${canvas.height}`);
-                document.body.removeChild(tempContainer); // Limpiar
-                continue; // Saltar esta boleta y continuar con la siguiente
+            // Abrir el PDF generado por el servidor en una nueva pestaña
+            if (result.fileUrl) {
+                 window.open(result.fileUrl, '_blank');
             }
-            // ************************
-
-            let yPos = 10; // Margen superior de 10mm
-
-            if (i % 2 === 0) {
-                // Boleta Impar (primera en la página)
-                if (!firstPage) {
-                    pdf.addPage();
-                }
-                yPos = 10; // Posición superior (margen superior de 10mm)
-            } else {
-                // Boleta Par (segunda en la página)
-                yPos = BOLETA_HEIGHT_MM + 10; // Mitad de la página + margen de 10mm
-            }
-            
-            // 4. Añadir imagen al PDF
-            pdf.addImage(imgData, 'JPEG', 10, yPos, IMG_WIDTH_MM, imgHeight); 
-
-            // 5. Limpiar
-            document.body.removeChild(tempContainer);
-            firstPage = false;
+        } else {
+            alert('❌ Error al generar el PDF consolidado: ' + (result.message || 'Error desconocido.'));
         }
 
-        // 6. Guardar el PDF final
-        pdf.save("Boletas_Soporte_Consolidadas.pdf");
-        alert('PDF de boletas consolidadas generado con éxito! 🎉');
-
     } catch (error) {
-        console.error('Error CRÍTICO al generar PDF consolidado:', error);
-        alert('Hubo un error crítico al generar el PDF. Revise la consola. 💥'); 
+        console.error('Error de red al llamar a Apps Script:', error);
+        alert('Hubo un problema de conexión de red al generar el PDF consolidado. 💥');
     } finally {
         button.disabled = false;
         button.textContent = 'Generar Todas las Boletas en PDF';
