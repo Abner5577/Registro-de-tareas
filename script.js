@@ -1,7 +1,7 @@
 // script.js (VERSIÓN 3)
 
 // ** IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script Web App **
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzCeNkaY3G-eX5peRRNreY0n8JqvQXh884_XjVqsYSQNu3ogYgjVzEytCZh4XSOYbVWA/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxRX6upyayl1Rj9C2aNhaWPq8sxEd0q5ruO-bPvaFxe8eAbvU-eRRPAvfBZ3oQYT7zNKA/exec'; 
 
 
 const formatDateForDisplay = (dateValue) => {
