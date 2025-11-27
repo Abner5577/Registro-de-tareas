@@ -40,8 +40,7 @@ const getFormattedDateForComparison = (dateValue) => {
 
 // ** FUNCIÓN PRINCIPAL DE GENERACIÓN DE PDF (LLAMADA AL SERVIDOR) **
 const handleGenerateAllForms = async () => {
-    // allTasks ya es global, por lo que es accesible aquí
-    const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
+   const tasksToGenerate = allTasks.filter(task => task.estado === 'Realizada'); 
     
     if (tasksToGenerate.length === 0) {
         alert("No hay tareas realizadas (Realizada) para generar el PDF consolidado. 📋"); 
